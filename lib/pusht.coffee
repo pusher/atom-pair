@@ -2,6 +2,10 @@ PushtView = require './pusht-view'
 
 require './pusher'
 
+_ = require 'underscore'
+
+JSDiff = require 'diff'
+
 {CompositeDisposable} = require 'atom'
 
 module.exports = Pusht =
@@ -29,21 +33,46 @@ module.exports = Pusht =
     pushtViewState: @pushtView.serialize()
 
   toggle: ->
+
+    editor = atom.workspace.getActiveEditor()
+
+    buffer = editor.buffer
+
     pusher = new Pusher 'd41a439c438a100756f5', { authEndpoint: 'http://localhost:3000/presence/auth' }
 
     channel = pusher.subscribe('presence-pairing')
 
+    me = null
+
+    lastEvent = null
+
     channel.bind 'pusher:subscription_succeeded', (members) ->
-      console.log members.me.id
+      me =  members.me.id
 
-    channel.bind 'new_change', (data) ->
-      console.log(data)
+    triggerPush = true
 
+    channel.bind 'client-change', (data) ->
+      if data.deletion
+        buffer.delete data.oldRange
+      else
+        # unless !lastEvent or ((data.newText is lastEvent.newText) and (_.isEqual data.newRange, lastEvent.newRange))
+        if !lastEvent or !((data.newText is lastEvent.newText) and (_.isEqual data.newRange, lastEvent.newRange))
+          # console.log data.newText
+          # console.log lastEvent.newText
+          # console.log (data.newText is lastEvent.newText)
+          #
+          # console.log "-------------"
+          #
+          # console.log data.newRange
+          # console.log lastEvent.newRange
+          # console.log (_.isEqual data.newRange, lastEvent.newRange)
 
+          triggerPush = false
+          buffer.setTextInRange data.newRange, data.newText
+      triggerPush = true
 
-    # console.log 'Pusht was toggled!'
-    #
-    # if @modalPanel.isVisible()
-    #   @modalPanel.hide()
-    # else
-    #   @modalPanel.show()
+    buffer.onDidChange (event) ->
+      console.log "BUG!!"
+      lastEvent = event
+      deletion = (event.newText.length is 0)
+      if triggerPush then channel.trigger 'client-change', {deletion: deletion, oldRange: event.oldRange, newRange: event.newRange, oldText: event.oldText, newText: event.newText}

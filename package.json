@@ -12,5 +12,7 @@
     "atom": ">0.50.0"
   },
   "dependencies": {
+    "diff": "^1.2.1",
+    "underscore": "^1.7.0"
   }
 }
