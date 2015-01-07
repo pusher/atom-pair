@@ -44,7 +44,7 @@ module.exports = Pusht =
 
     me = null
 
-    lastEvent = null
+    lastEvent = {}
 
     channel.bind 'pusher:subscription_succeeded', (members) ->
       me =  members.me.id
@@ -52,27 +52,27 @@ module.exports = Pusht =
     triggerPush = true
 
     channel.bind 'client-change', (data) ->
+      console.log data
+      triggerPush = false
       if data.deletion
         buffer.delete data.oldRange
       else
-        # unless !lastEvent or ((data.newText is lastEvent.newText) and (_.isEqual data.newRange, lastEvent.newRange))
         if !lastEvent or !((data.newText is lastEvent.newText) and (_.isEqual data.newRange, lastEvent.newRange))
-          # console.log data.newText
-          # console.log lastEvent.newText
-          # console.log (data.newText is lastEvent.newText)
-          #
-          # console.log "-------------"
-          #
-          # console.log data.newRange
-          # console.log lastEvent.newRange
-          # console.log (_.isEqual data.newRange, lastEvent.newRange)
-
-          triggerPush = false
           buffer.setTextInRange data.newRange, data.newText
       triggerPush = true
 
     buffer.onDidChange (event) ->
-      console.log "BUG!!"
-      lastEvent = event
-      deletion = (event.newText.length is 0)
-      if triggerPush then channel.trigger 'client-change', {deletion: deletion, oldRange: event.oldRange, newRange: event.newRange, oldText: event.oldText, newText: event.newText}
+      console.log event
+      lastEvent = {newRange: event.newRange, newText: event.newText}
+
+      insertNewLine = (event.newText is "\n")
+      deletion = !insertNewLine and (event.newText.length is 0)
+
+
+      if triggerPush then channel.trigger 'client-change',
+        insertNewLine: insertNewLine
+        deletion: deletion
+        oldRange: event.oldRange
+        newRange: event.newRange
+        oldText: event.oldText
+        newText: event.newText
