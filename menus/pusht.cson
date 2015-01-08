@@ -2,7 +2,7 @@
 'context-menu':
   'atom-text-editor': [
     {
-      'label': 'Toggle pusht'
+      'label': 'Start new pairing session'
       'command': 'pusht:toggle'
     }
   ]
@@ -13,7 +13,7 @@
       'label': 'pusht'
       'submenu': [
         {
-          'label': 'Toggle'
+          'label': 'Start new pairing session'
           'command': 'pusht:toggle'
         }
       ]

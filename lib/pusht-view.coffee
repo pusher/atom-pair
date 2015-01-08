@@ -9,7 +9,10 @@ class PushtView
     message = document.createElement('div')
     message.textContent = "The Pusht package is Alive! It's ALIVE!"
     message.classList.add('message')
-    @element.appendChild(message)
+
+    input = document.createElement('input')
+
+    @element.appendChild(input)
 
   # Returns an object that can be retrieved when package is activated
   serialize: ->

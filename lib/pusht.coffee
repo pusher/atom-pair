@@ -35,13 +35,11 @@ module.exports = Pusht =
   toggle: ->
 
     editor = atom.workspace.getActiveEditor()
-
     buffer = editor.buffer
 
     pusher = new Pusher 'd41a439c438a100756f5', { authEndpoint: 'http://localhost:3000/presence/auth' }
 
     channel = pusher.subscribe('presence-pairing')
-
 
     channel.bind 'pusher:subscription_succeeded', (members) ->
       console.log members.me.id
@@ -50,35 +48,22 @@ module.exports = Pusht =
 
     channel.bind 'client-change', (data) ->
 
-      newRange = Range.fromObject(data.newRange)
-      oldRange = Range.fromObject(data.oldRange)
-      console.log data
+      newRange = Range.fromObject(data.event.newRange)
+      oldRange = Range.fromObject(data.event.oldRange)
+      newText = data.event.newText
 
       triggerPush = false
+
       if data.deletion
-        buffer.delete data.oldRange
+        buffer.delete oldRange
       else if oldRange.containsRange(newRange)
-        console.log 'containment'
-        buffer.setTextInRange oldRange, data.newText
+        buffer.setTextInRange oldRange, newText
       else
-          # buffer.setTextInRange data.newRange, data.newText
-          buffer.insert data.newRange.start, data.newText
+          buffer.insert newRange.start, newText
+
       triggerPush = true
 
     buffer.onDidChange (event) ->
-
       return unless triggerPush
-
-      console.log event
-
-      insertNewLine = (event.newText is "\n")
-      deletion = !insertNewLine and (event.newText.length is 0)
-
-
-      channel.trigger 'client-change',
-        deletion: deletion
-        oldRange: event.oldRange
-        newRange: event.newRange
-        oldText: event.oldText
-        newText: event.newText
-#
+      deletion = !(event.newText is "\n") and (event.newText.length is 0)
+      channel.trigger 'client-change', {deletion: deletion, event: event}
