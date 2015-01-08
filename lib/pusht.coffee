@@ -42,12 +42,9 @@ module.exports = Pusht =
 
     channel = pusher.subscribe('presence-pairing')
 
-    me = null
-
-    lastEvent = {}
 
     channel.bind 'pusher:subscription_succeeded', (members) ->
-      me =  members.me.id
+      console.log members.me.id
 
     triggerPush = true
 
@@ -56,14 +53,19 @@ module.exports = Pusht =
       triggerPush = false
       if data.deletion
         buffer.delete data.oldRange
+      # else if data.insertNewLine
+        # buffer.setTextInRange data.newRange, data.oldText
       else
-        if !lastEvent or !((data.newText is lastEvent.newText) and (_.isEqual data.newRange, lastEvent.newRange))
           buffer.setTextInRange data.newRange, data.newText
       triggerPush = true
 
     buffer.onDidChange (event) ->
+
       console.log event
-      lastEvent = {newRange: event.newRange, newText: event.newText}
+
+
+      return if (_.isEqual event.newRange, event.oldRange) and (event.newText is event.oldText)
+
 
       insertNewLine = (event.newText is "\n")
       deletion = !insertNewLine and (event.newText.length is 0)
