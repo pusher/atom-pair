@@ -23,9 +23,12 @@ module.exports = Pusht =
     @subscriptions = new CompositeDisposable
 
     # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @start()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @join()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:id:copy': => @copyId()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @startSession()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @joinSession()
+
+    @subscriptions.add atom.commands.add 'atom-panel-container', 'pusht:set configuration keys': => @setConfig()
+
+    atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
 
   deactivate: ->
@@ -39,7 +42,10 @@ module.exports = Pusht =
   copyId: ->
     atom.clipboard.write(@sessionId)
 
-  join: ->
+  setConfig: ->
+    @configView = new ConfigView
+
+  joinSession: ->
     @joinView = new JoinView
     @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
     @joinView.miniEditor.focus()
@@ -49,12 +55,13 @@ module.exports = Pusht =
       @joinPanel.hide()
       @startPairing()
 
-  start: ->
+  startSession: ->
 
     $.get('http://localhost:3000/session/id').success (id) =>
       @sessionId = id
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
+      console.log(@startView)
       @startView.focus()
       @startPairing()
 
@@ -81,7 +88,7 @@ module.exports = Pusht =
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
       else
-          buffer.insert newRange.start, newText
+        buffer.insert newRange.start, newText
 
       triggerPush = true
 

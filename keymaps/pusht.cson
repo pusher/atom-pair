@@ -9,4 +9,5 @@
 # https://atom.io/docs/latest/advanced/keymaps
 'atom-workspace':
   'ctrl-alt-o': 'pusht:toggle'
-  'cmd-c': 'pusht:id:copy'
+'div.session-id':
+  'cmd-c': 'pusht:copyid'
