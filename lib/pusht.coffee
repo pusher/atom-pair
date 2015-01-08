@@ -2,6 +2,7 @@ PushtView = require './pusht-view'
 StartView = require './start-view'
 JoinView = require './join-view'
 ConfigView = require './config-view'
+AlertView = require './alert-view'
 
 
 require './pusher'
@@ -35,10 +36,6 @@ module.exports = Pusht =
 
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
-    @app_id = atom.config.get 'pusher_app_id'
-    @app_key = atom.config.get 'pusher_app_key'
-    @app_secret = atom.config.get 'pusher_app_secret'
-
 
   deactivate: ->
     @modalPanel.destroy()
@@ -56,7 +53,7 @@ module.exports = Pusht =
     @configPanel = atom.workspace.addModalPanel(item: @configView, visible: true)
 
     @configView.on 'core:confirm', =>
-      _.each ['pusher_app_id', 'pusher_app_key', 'pusher_app_secret'], (key) =>
+      _.each ['pusher_app_key', 'pusher_app_secret'], (key) =>
         value = @configView[key].getText()
         atom.config.set(key, value)
       @configPanel.hide()
@@ -76,12 +73,23 @@ module.exports = Pusht =
       @startPairing()
 
   startSession: ->
-    string = randomstring.generate(11)
-    @sessionId = "#{@app_key}-#{@app_secret}-#{string}"
-    @startView = new StartView(@sessionId)
-    @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
-    @startView.focus()
-    @startPairing()
+
+    @app_key = atom.config.get 'pusher_app_key'
+    @app_secret = atom.config.get 'pusher_app_secret'
+
+    missingKeys = _.any([@app_key, @app_secret], (key) ->
+      typeof(key) is "undefined")
+
+    if missingKeys
+      alertView = new AlertView
+      atom.workspace.addModalPanel(item: alertView, visible: true)
+    else
+      string = randomstring.generate(11)
+      @sessionId = "#{@app_key}-#{@app_secret}-#{string}"
+      @startView = new StartView(@sessionId)
+      @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
+      @startView.focus()
+      @startPairing()
 
   startPairing: ->
 
