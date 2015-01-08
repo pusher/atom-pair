@@ -4,8 +4,6 @@ require './pusher'
 
 _ = require 'underscore'
 
-JSDiff = require 'diff'
-
 {CompositeDisposable} = require 'atom'
 
 module.exports = Pusht =
@@ -53,13 +51,16 @@ module.exports = Pusht =
       triggerPush = false
       if data.deletion
         buffer.delete data.oldRange
-      # else if data.insertNewLine
-        # buffer.setTextInRange data.newRange, data.oldText
+      # else if data.newRange.intersectsWith(data.oldRange)
+        # console.log 'intersection'
       else
-          buffer.setTextInRange data.newRange, data.newText
+          # buffer.setTextInRange data.newRange, data.newText
+          buffer.insert data.newRange.start, data.newText
       triggerPush = true
 
     buffer.onDidChange (event) ->
+
+      return unless triggerPush
 
       console.log event
 
@@ -71,10 +72,11 @@ module.exports = Pusht =
       deletion = !insertNewLine and (event.newText.length is 0)
 
 
-      if triggerPush then channel.trigger 'client-change',
+      channel.trigger 'client-change',
         insertNewLine: insertNewLine
         deletion: deletion
         oldRange: event.oldRange
         newRange: event.newRange
         oldText: event.oldText
         newText: event.newText
+#
