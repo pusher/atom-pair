@@ -1,10 +1,15 @@
 PushtView = require './pusht-view'
 StartView = require './start-view'
 JoinView = require './join-view'
+ConfigView = require './config-view'
+
 
 require './pusher'
-$ = require 'jquery'
+require './pusher-js-client-auth'
+
+randomstring = require 'randomstring'
 _ = require 'underscore'
+
 
 {CompositeDisposable} = require 'atom'
 
@@ -26,9 +31,13 @@ module.exports = Pusht =
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @joinSession()
 
-    @subscriptions.add atom.commands.add 'atom-panel-container', 'pusht:set configuration keys': => @setConfig()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:set configuration keys': => @setConfig()
 
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
+
+    @app_id = atom.config.get 'pusher_app_id'
+    @app_key = atom.config.get 'pusher_app_key'
+    @app_secret = atom.config.get 'pusher_app_secret'
 
 
   deactivate: ->
@@ -44,6 +53,15 @@ module.exports = Pusht =
 
   setConfig: ->
     @configView = new ConfigView
+    @configPanel = atom.workspace.addModalPanel(item: @configView, visible: true)
+
+    @configView.on 'core:confirm', =>
+      _.each ['pusher_app_id', 'pusher_app_key', 'pusher_app_secret'], (key) =>
+        value = @configView[key].getText()
+        atom.config.set(key, value)
+      @configPanel.hide()
+
+
 
   joinSession: ->
     @joinView = new JoinView
@@ -52,18 +70,18 @@ module.exports = Pusht =
 
     @joinView.on 'core:confirm', =>
       @sessionId = @joinView.miniEditor.getText()
+      keys = @sessionId.split("-")
+      [@app_key, @app_secret] = [keys[0], keys[1]]
       @joinPanel.hide()
       @startPairing()
 
   startSession: ->
-
-    $.get('http://localhost:3000/session/id').success (id) =>
-      @sessionId = id
-      @startView = new StartView(@sessionId)
-      @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
-      console.log(@startView)
-      @startView.focus()
-      @startPairing()
+    string = randomstring.generate(11)
+    @sessionId = "#{@app_key}-#{@app_secret}-#{string}"
+    @startView = new StartView(@sessionId)
+    @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
+    @startView.focus()
+    @startPairing()
 
   startPairing: ->
 
@@ -71,7 +89,11 @@ module.exports = Pusht =
 
     buffer = atom.workspace.getActiveEditor().buffer
 
-    pusher = new Pusher 'd41a439c438a100756f5', {authEndpoint: 'http://localhost:3000/session/authenticate'}
+    pusher = new Pusher @app_key,
+      authTransport: 'client'
+      clientAuth:
+        key: @app_key
+        secret: @app_secret
 
     pairingChannel = pusher.subscribe("private-session-#{@sessionId}")
 
