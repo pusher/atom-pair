@@ -1,5 +1,6 @@
 PushtView = require './pusht-view'
 StartView = require './start-view'
+JoinView = require './join-view'
 
 require './pusher'
 $ = require 'jquery'
@@ -24,6 +25,8 @@ module.exports = Pusht =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @start()
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @join()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:id:copy': => @copyId()
+
 
   deactivate: ->
     @modalPanel.destroy()
@@ -33,48 +36,56 @@ module.exports = Pusht =
   serialize: ->
     pushtViewState: @pushtView.serialize()
 
-  join: ->
+  copyId: ->
+    atom.clipboard.write(@sessionId)
 
+  join: ->
+    @joinView = new JoinView
+    @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
+    @joinView.miniEditor.focus()
+
+    @joinView.on 'core:confirm', =>
+      @sessionId = @joinView.miniEditor.getText()
+      @joinPanel.hide()
+      @startPairing()
 
   start: ->
 
-    sessionId = null
+    $.get('http://localhost:3000/session/id').success (id) =>
+      @sessionId = id
+      @startView = new StartView(@sessionId)
+      @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
+      @startView.focus()
+      @startPairing()
+
+  startPairing: ->
+
     triggerPush = true
 
+    buffer = atom.workspace.getActiveEditor().buffer
 
-    editor = atom.workspace.getActiveEditor()
-    buffer = editor.buffer
+    pusher = new Pusher 'd41a439c438a100756f5', {authEndpoint: 'http://localhost:3000/session/authenticate'}
 
-    pusher = new Pusher 'd41a439c438a100756f5'
+    pairingChannel = pusher.subscribe("private-session-#{@sessionId}")
 
-    pairingChannel = null
+    pairingChannel.bind 'client-change', (data) ->
 
-    $.get('http://localhost:3000/session/id').success (id) ->
-      sessionId = id
-      @startView = new StartView(sessionId)
-      @modalPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
-      pairingChannel = pusher.subscribe("session-#{sessionId}")
-      startPairing()
+      newRange = Range.fromObject(data.event.newRange)
+      oldRange = Range.fromObject(data.event.oldRange)
+      newText = data.event.newText
 
-    startPairing = ->
-      pairingChannel.bind 'client-change', (data) ->
+      triggerPush = false
 
-        newRange = Range.fromObject(data.event.newRange)
-        oldRange = Range.fromObject(data.event.oldRange)
-        newText = data.event.newText
+      if data.deletion
+        buffer.delete oldRange
+      else if oldRange.containsRange(newRange)
+        buffer.setTextInRange oldRange, newText
+      else
+          buffer.insert newRange.start, newText
 
-        triggerPush = false
+      triggerPush = true
 
-        if data.deletion
-          buffer.delete oldRange
-        else if oldRange.containsRange(newRange)
-          buffer.setTextInRange oldRange, newText
-        else
-            buffer.insert newRange.start, newText
-
-        triggerPush = true
-
-      buffer.onDidChange (event) ->
-        return unless triggerPush
-        deletion = !(event.newText is "\n") and (event.newText.length is 0)
-        pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
+    buffer.onDidChange (event) ->
+      return unless triggerPush
+      deletion = !(event.newText is "\n") and (event.newText.length is 0)
+      pairingChannel.trigger 'client-change', {deletion: deletion, event: event}

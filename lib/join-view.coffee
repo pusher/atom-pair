@@ -7,4 +7,4 @@ class JoinView extends View
   @content: ->
     @div =>
       @div "Enter the session ID here:"
-      @subview 'sessionId', new TextEditorView(mini: true)
+      @subview 'miniEditor', new TextEditorView(mini: true)

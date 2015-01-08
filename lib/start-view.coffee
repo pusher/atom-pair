@@ -6,5 +6,4 @@ class StartView extends View
 
   @content: (sessionId)->
     @div =>
-      @div "Your session ID is #{sessionId}"
-      # @subview 'answer', new TextEditorView(mini: true)
+      @div "Your session ID is #{sessionId}. Press cmd-c to copy to your clipboard"
