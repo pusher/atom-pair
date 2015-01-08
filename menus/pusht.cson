@@ -3,7 +3,7 @@
   'atom-text-editor': [
     {
       'label': 'Start new pairing session'
-      'command': 'pusht:toggle'
+      'command': 'pusht:start new pairing session'
     }
   ]
 'menu': [
@@ -14,7 +14,7 @@
       'submenu': [
         {
           'label': 'Start new pairing session'
-          'command': 'pusht:toggle'
+          'command': 'pusht:start new pairing session'
         }
       ]
     ]
