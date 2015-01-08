@@ -6,6 +6,8 @@ _ = require 'underscore'
 
 {CompositeDisposable} = require 'atom'
 
+Range = require('atom').Range
+
 module.exports = Pusht =
   pushtView: null
   modalPanel: null
@@ -47,12 +49,17 @@ module.exports = Pusht =
     triggerPush = true
 
     channel.bind 'client-change', (data) ->
+
+      newRange = Range.fromObject(data.newRange)
+      oldRange = Range.fromObject(data.oldRange)
       console.log data
+
       triggerPush = false
       if data.deletion
         buffer.delete data.oldRange
-      # else if data.newRange.intersectsWith(data.oldRange)
-        # console.log 'intersection'
+      else if oldRange.containsRange(newRange)
+        console.log 'containment'
+        buffer.setTextInRange oldRange, data.newText
       else
           # buffer.setTextInRange data.newRange, data.newText
           buffer.insert data.newRange.start, data.newText
@@ -64,16 +71,11 @@ module.exports = Pusht =
 
       console.log event
 
-
-      return if (_.isEqual event.newRange, event.oldRange) and (event.newText is event.oldText)
-
-
       insertNewLine = (event.newText is "\n")
       deletion = !insertNewLine and (event.newText.length is 0)
 
 
       channel.trigger 'client-change',
-        insertNewLine: insertNewLine
         deletion: deletion
         oldRange: event.oldRange
         newRange: event.newRange
