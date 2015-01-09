@@ -4,6 +4,6 @@
 module.exports =
 class AlertView extends View
 
-  @content: ->
+  @content: (message)->
     @div =>
-      @div "Please set your Pusher keys."
+      @div message

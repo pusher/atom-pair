@@ -1,9 +1,8 @@
 PushtView = require './pusht-view'
 StartView = require './start-view'
-JoinView = require './join-view'
+InputView = require './input-view'
 ConfigView = require './config-view'
 AlertView = require './alert-view'
-
 
 require './pusher'
 require './pusher-js-client-auth'
@@ -11,6 +10,7 @@ require './pusher-js-client-auth'
 randomstring = require 'randomstring'
 _ = require 'underscore'
 
+HipChat = require 'node-hipchat'
 
 {CompositeDisposable} = require 'atom'
 
@@ -34,6 +34,9 @@ module.exports = Pusht =
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:set configuration keys': => @setConfig()
 
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:invite over hipchat': => @inviteOverHipChat()
+
+
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
 
@@ -53,15 +56,15 @@ module.exports = Pusht =
     @configPanel = atom.workspace.addModalPanel(item: @configView, visible: true)
 
     @configView.on 'core:confirm', =>
-      _.each ['pusher_app_key', 'pusher_app_secret'], (key) =>
+      _.each ['pusher_app_key', 'pusher_app_secret', 'hipchat_token', 'hipchat_room_id'], (key) =>
         value = @configView[key].getText()
-        atom.config.set(key, value)
+        atom.config.set(key, value) unless value.length is 0
       @configPanel.hide()
 
 
 
   joinSession: ->
-    @joinView = new JoinView
+    @joinView = new InputView("Enter the session ID here:")
     @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
     @joinView.miniEditor.focus()
 
@@ -72,24 +75,61 @@ module.exports = Pusht =
       @joinPanel.hide()
       @startPairing()
 
-  startSession: ->
-
+  getKeysFromConfig: ->
     @app_key = atom.config.get 'pusher_app_key'
     @app_secret = atom.config.get 'pusher_app_secret'
 
-    missingKeys = _.any([@app_key, @app_secret], (key) ->
+  missingKeys: ->
+    _.any([@app_key, @app_secret], (key) ->
       typeof(key) is "undefined")
 
-    if missingKeys
-      alertView = new AlertView
+  startSession: ->
+    @getKeysFromConfig()
+
+    if @missingKeys()
+      alertView = new AlertView "Please set your Pusher keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
-      string = randomstring.generate(11)
-      @sessionId = "#{@app_key}-#{@app_secret}-#{string}"
+      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
       @startPairing()
+
+  inviteOverHipChat: ->
+    @getKeysFromConfig()
+
+    if @missingKeys()
+      alertView = new AlertView
+      atom.workspace.addModalPanel(item: alertView, visible: true)
+    else
+      inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
+      invitePanel = atom.workspace.addModalPanel(item: inviteView, visible: true)
+      inviteView.on 'core:confirm', =>
+        mentionName = inviteView.miniEditor.getText()
+        @sendHipChatMessageTo(mentionName)
+        invitePanel.hide()
+
+  sendHipChatMessageTo: (mentionName) ->
+
+    hc_key = atom.config.get 'hipchat_token'
+    room_id = atom.config.get 'hipchat_room_id'
+
+    hc_client = new HipChat(hc_key)
+
+    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
+
+    params = {
+      room: room_id,
+      from: 'PusherPair',
+      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. Go onto Atom, and if you've installed the PusherPair plugin, hit 'Join a pairing session', and enter this string: #{@sessionId}",
+      message_format: 'text'
+    }
+
+    hc_client.postMessage params, (data) ->
+      alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
+      atom.workspace.addModalPanel(item: alertView, visible: true)
+
 
   startPairing: ->
 
