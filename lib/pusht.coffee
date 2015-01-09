@@ -78,15 +78,21 @@ module.exports = Pusht =
   getKeysFromConfig: ->
     @app_key = atom.config.get 'pusher_app_key'
     @app_secret = atom.config.get 'pusher_app_secret'
+    @hc_key = atom.config.get 'hipchat_token'
+    @room_id = atom.config.get 'hipchat_room_id'
 
-  missingKeys: ->
+  missingPusherKeys: ->
     _.any([@app_key, @app_secret], (key) ->
+      typeof(key) is "undefined")
+
+  missingHipChatKeys: ->
+    _.any([@hc_key, @room_id], (key) ->
       typeof(key) is "undefined")
 
   startSession: ->
     @getKeysFromConfig()
 
-    if @missingKeys()
+    if @missingPusherKeys()
       alertView = new AlertView "Please set your Pusher keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
@@ -99,8 +105,11 @@ module.exports = Pusht =
   inviteOverHipChat: ->
     @getKeysFromConfig()
 
-    if @missingKeys()
-      alertView = new AlertView
+    if @missingPusherKeys()
+      alertView = new AlertView "Please set your Pusher keys."
+      atom.workspace.addModalPanel(item: alertView, visible: true)
+    else if @missingHipChatKeys()
+      alertView = new AlertView "Please set your HipChat keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
@@ -112,15 +121,13 @@ module.exports = Pusht =
 
   sendHipChatMessageTo: (mentionName) ->
 
-    hc_key = atom.config.get 'hipchat_token'
-    room_id = atom.config.get 'hipchat_room_id'
 
-    hc_client = new HipChat(hc_key)
+    hc_client = new HipChat(@hc_key)
 
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
     params = {
-      room: room_id,
+      room: @room_id,
       from: 'PusherPair',
       message: "Hello there #{mentionName}. Somebody really really wants to pair with you. Go onto Atom, and if you've installed the PusherPair plugin, hit 'Join a pairing session', and enter this string: #{@sessionId}",
       message_format: 'text'
