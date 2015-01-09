@@ -160,9 +160,14 @@ module.exports = Pusht =
     @pairingChannel.bind 'client-joined', (data) =>
       @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:share current file': => @shareCurrentFile(buffer)
 
-    @pairingChannel.bind 'client-share-file', (file) ->
+    @pairingChannel.bind 'client-share-whole-file', (file) ->
       triggerPush = false
       buffer.setText(file)
+      triggerPush = true
+
+    @pairingChannel.bind 'client-share-partial-file', (chunk) ->
+      triggerPush = false
+      buffer.append(chunk)
       triggerPush = true
 
     @pairingChannel.bind 'client-change', (data) ->
@@ -189,4 +194,18 @@ module.exports = Pusht =
 
   shareCurrentFile: (buffer)->
     currentFile = buffer.getText()
-    @pairingChannel.trigger 'client-share-file', currentFile
+
+
+    size = Buffer.byteLength(currentFile, 'utf8')
+
+    if size < 1000
+      @pairingChannel.trigger 'client-share-whole-file', currentFile
+    else
+      console.log('too big a file')
+      # chunks = currentFile.match(/.{1,950}/g)
+      #
+      # chunkNumber = chunks.length
+      # chunksPerSecond = Math.ceil(chunkNumber / 10)
+      #
+      # _.each chunks, (chunk) =>
+      #     setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond * 1000)
