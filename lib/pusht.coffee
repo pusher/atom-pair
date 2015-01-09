@@ -126,9 +126,10 @@ module.exports = Pusht =
       message_format: 'text'
     }
 
-    hc_client.postMessage params, (data) ->
+    hc_client.postMessage params, (data) =>
       alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
       atom.workspace.addModalPanel(item: alertView, visible: true)
+      @startPairing()
 
 
   startPairing: ->
