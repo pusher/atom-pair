@@ -100,6 +100,7 @@ module.exports = Pusht =
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
+      @members = 1
       @startPairing()
 
   inviteOverHipChat: ->
@@ -120,22 +121,20 @@ module.exports = Pusht =
         invitePanel.hide()
 
   sendHipChatMessageTo: (mentionName) ->
-
-
     hc_client = new HipChat(@hc_key)
 
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
-    params = {
-      room: @room_id,
-      from: 'PusherPair',
-      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. Go onto Atom, and if you've installed the PusherPair plugin, hit 'Join a pairing session', and enter this string: #{@sessionId}",
+    params =
+      room: @room_id
+      from: 'PusherPair'
+      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. Go onto Atom, and if you've installed the PusherPair plugin, hit 'Join a pairing session', and enter this string: #{@sessionId}"
       message_format: 'text'
-    }
 
     hc_client.postMessage params, (data) =>
       alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
       atom.workspace.addModalPanel(item: alertView, visible: true)
+      @members = 1
       @startPairing()
 
 
@@ -145,15 +144,28 @@ module.exports = Pusht =
 
     buffer = atom.workspace.getActiveEditor().buffer
 
-    pusher = new Pusher @app_key,
+    @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
+        user_id: "user"
 
-    pairingChannel = pusher.subscribe("private-session-#{@sessionId}")
+    @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
-    pairingChannel.bind 'client-change', (data) ->
+    @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
+      console.log "I'm coming!"
+      @pairingChannel.trigger 'client-joined', {joined: true}
+
+    @pairingChannel.bind 'client-joined', (data) =>
+      @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:share current file': => @shareCurrentFile(buffer)
+
+    @pairingChannel.bind 'client-share-file', (file) ->
+      triggerPush = false
+      buffer.setText(file)
+      triggerPush = true
+
+    @pairingChannel.bind 'client-change', (data) ->
 
       newRange = Range.fromObject(data.event.newRange)
       oldRange = Range.fromObject(data.event.oldRange)
@@ -170,7 +182,11 @@ module.exports = Pusht =
 
       triggerPush = true
 
-    buffer.onDidChange (event) ->
+    buffer.onDidChange (event) =>
       return unless triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
+      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
+
+  shareCurrentFile: (buffer)->
+    currentFile = buffer.getText()
+    @pairingChannel.trigger 'client-share-file', currentFile
