@@ -41,9 +41,10 @@ module.exports = Pusht =
 
 
   deactivate: ->
-    @modalPanel.destroy()
     @subscriptions.dispose()
-    @pushtView.destroy()
+
+  disconnect: ->
+    @pusher.disconnect()
 
   serialize: ->
     pushtViewState: @pushtView.serialize()
@@ -140,6 +141,8 @@ module.exports = Pusht =
 
   startPairing: ->
 
+    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
+
     triggerPush = true
 
     @editor = atom.workspace.getActiveEditor()
@@ -158,13 +161,14 @@ module.exports = Pusht =
       @pairingChannel.trigger 'client-joined', {joined: true}
 
     @pairingChannel.bind 'client-joined', (data) =>
+      @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
       @editor.setGrammar(grammar)
-
+      @syncGrammars()
 
     @pairingChannel.bind 'client-share-whole-file', (file) ->
       triggerPush = false
@@ -199,8 +203,10 @@ module.exports = Pusht =
       @pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
 
   syncGrammars: ->
-    grammar = @editor.getGrammar()
+    @editor.on 'grammar-changed', => @sendGrammar()
 
+  sendGrammar: ->
+    grammar = @editor.getGrammar()
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
 
 
