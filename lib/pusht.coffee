@@ -1,11 +1,11 @@
-PushtView = require './pusht-view'
-StartView = require './start-view'
-InputView = require './input-view'
-ConfigView = require './config-view'
-AlertView = require './alert-view'
+PushtView = require './views/pusht-view'
+StartView = require './views/start-view'
+InputView = require './views/input-view'
+ConfigView = require './views/config-view'
+AlertView = require './views/alert-view'
 
-require './pusher'
-require './pusher-js-client-auth'
+require './pusher/pusher'
+require './pusher/pusher-js-client-auth'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
@@ -46,6 +46,7 @@ module.exports = Pusht =
 
   disconnect: ->
     @pusher.disconnect()
+    @hideViews()
 
   serialize: ->
     pushtViewState: @pushtView.serialize()
