@@ -202,10 +202,24 @@ module.exports = Pusht =
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
       console.log('too big a file')
-      # chunks = currentFile.match(/.{1,950}/g)
-      #
-      # chunkNumber = chunks.length
-      # chunksPerSecond = Math.ceil(chunkNumber / 10)
-      #
-      # _.each chunks, (chunk) =>
-      #     setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond * 1000)
+      chunks = @chunkString(currentFile, 950)
+
+      console.log chunks;
+
+      chunksPerSecond = chunks.length / 10
+
+      _.each chunks, (chunk) =>
+        setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond)
+
+
+  chunkString: (str, len) ->
+    _size = Math.ceil(str.length / len)
+    _ret = new Array(_size)
+    _offset = undefined
+    _i = 0
+
+    while _i < _size
+      _offset = _i * len
+      _ret[_i] = str.substring(_offset, _offset + len)
+      _i++
+    _ret
