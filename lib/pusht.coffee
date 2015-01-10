@@ -36,6 +36,7 @@ module.exports = Pusht =
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:invite over hipchat': => @inviteOverHipChat()
 
+    atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
 
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
@@ -51,6 +52,9 @@ module.exports = Pusht =
 
   copyId: ->
     atom.clipboard.write(@sessionId)
+
+  hidePanel: ->
+    _.each atom.workspace.getModalPanels(), (panel) -> panel.hide()
 
   setConfig: ->
     @configView = new ConfigView

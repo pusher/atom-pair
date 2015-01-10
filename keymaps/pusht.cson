@@ -9,5 +9,6 @@
 # https://atom.io/docs/latest/advanced/keymaps
 'atom-workspace':
   'ctrl-alt-o': 'pusht:toggle'
+  'escape': 'pusht:hide views'
 'div.session-id':
   'cmd-c': 'pusht:copyid'
