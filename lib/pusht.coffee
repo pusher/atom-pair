@@ -142,7 +142,8 @@ module.exports = Pusht =
 
     triggerPush = true
 
-    buffer = atom.workspace.getActiveEditor().buffer
+    @editor = atom.workspace.getActiveEditor()
+    buffer = @editor.buffer
 
     @pusher = new Pusher @app_key,
       authTransport: 'client'
@@ -154,11 +155,16 @@ module.exports = Pusht =
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-      console.log "I'm coming!"
       @pairingChannel.trigger 'client-joined', {joined: true}
 
     @pairingChannel.bind 'client-joined', (data) =>
-      @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:share current file': => @shareCurrentFile(buffer)
+      @syncGrammars()
+      @shareCurrentFile(buffer)
+
+    @pairingChannel.bind 'client-grammar-sync', (syntax) =>
+      grammar = atom.grammars.grammarForScopeName(syntax)
+      @editor.setGrammar(grammar)
+
 
     @pairingChannel.bind 'client-share-whole-file', (file) ->
       triggerPush = false
@@ -192,20 +198,23 @@ module.exports = Pusht =
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
       @pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
 
+  syncGrammars: ->
+    grammar = @editor.getGrammar()
+
+    @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
+
+
   shareCurrentFile: (buffer)->
     currentFile = buffer.getText()
 
+    return if currentFile.length is 0
 
     size = Buffer.byteLength(currentFile, 'utf8')
 
     if size < 1000
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
-      console.log('too big a file')
       chunks = @chunkString(currentFile, 950)
-
-      console.log chunks;
-
       chunksPerSecond = chunks.length / 10
 
       _.each chunks, (chunk) =>
