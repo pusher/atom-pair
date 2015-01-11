@@ -184,7 +184,7 @@ module.exports = Pusht =
       buffer.append(chunk)
       triggerPush = true
 
-    @pairingChannel.bind 'client-change', (data) ->
+    @pairingChannel.bind 'client-change', (data) =>
 
       newRange = Range.fromObject(data.event.newRange)
       oldRange = Range.fromObject(data.event.oldRange)
@@ -194,10 +194,13 @@ module.exports = Pusht =
 
       if data.deletion
         buffer.delete oldRange
+        @editor.scrollToBufferPosition(oldRange.start)
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
+        @editor.scrollToBufferPosition(oldRange.start)
       else
         buffer.insert newRange.start, newText
+        @editor.scrollToBufferPosition(newRange.start)
 
       triggerPush = true
 
