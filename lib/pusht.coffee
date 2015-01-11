@@ -166,6 +166,8 @@ module.exports = Pusht =
       @pairingChannel.trigger 'client-joined', {joined: true}
 
     @pairingChannel.bind 'client-joined', (data) =>
+      noticeView = new AlertView "Your pair buddy has joined the session."
+      atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
