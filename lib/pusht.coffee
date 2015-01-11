@@ -13,8 +13,7 @@ _ = require 'underscore'
 HipChat = require 'node-hipchat'
 
 {CompositeDisposable} = require 'atom'
-
-Range = require('atom').Range
+{Range} = require 'atom'
 
 module.exports = Pusht =
   pushtView: null
@@ -22,8 +21,6 @@ module.exports = Pusht =
   subscriptions: null
 
   activate: (state) ->
-
-    @pushtView = new PushtView(state.pushtViewState)
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -46,7 +43,7 @@ module.exports = Pusht =
 
   disconnect: ->
     @pusher.disconnect()
-    @hideViews()
+    @hidePanel()
 
   serialize: ->
     pushtViewState: @pushtView.serialize()
