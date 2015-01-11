@@ -1,4 +1,3 @@
-PushtView = require './views/pusht-view'
 StartView = require './views/start-view'
 InputView = require './views/input-view'
 ConfigView = require './views/config-view'
@@ -9,6 +8,7 @@ require './pusher/pusher-js-client-auth'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
+chunkString = require './helpers/chunk-string'
 
 HipChat = require 'node-hipchat'
 
@@ -213,32 +213,15 @@ module.exports = Pusht =
     grammar = @editor.getGrammar()
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
 
-
   shareCurrentFile: (buffer)->
     currentFile = buffer.getText()
-
     return if currentFile.length is 0
-
     size = Buffer.byteLength(currentFile, 'utf8')
 
     if size < 1000
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
-      chunks = @chunkString(currentFile, 950)
+      chunks = chunkString(currentFile, 950)
       chunksPerSecond = chunks.length / 10
-
       _.each chunks, (chunk) =>
         setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond)
-
-
-  chunkString: (str, len) ->
-    _size = Math.ceil(str.length / len)
-    _ret = new Array(_size)
-    _offset = undefined
-    _i = 0
-
-    while _i < _size
-      _offset = _i * len
-      _ret[_i] = str.substring(_offset, _offset + len)
-      _i++
-    _ret
