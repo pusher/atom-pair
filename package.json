@@ -11,7 +11,7 @@
       "pusht:invite over hipchat"
     ]
   },
-  "repository": "https://github.com/jpatel531/pusher-pair",
+  "repository": "https://github.com/jpatel531/atom-package",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
