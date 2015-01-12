@@ -1,5 +1,5 @@
 {
-  "name": "pusht",
+  "name": "pusher-pair",
   "main": "./lib/pusht",
   "version": "0.6.0",
   "description": "A short description of your package",
