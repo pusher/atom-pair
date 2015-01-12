@@ -28,15 +28,130 @@ module.exports = Pusht =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @joinSession()
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:set configuration keys': => @setConfig()
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:invite over hipchat': => @inviteOverHipChat()
 
     atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
-
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
+    @cursorColours = [
+      "aqua",
+      "aquamarine",
+      "beige",
+      "bisque",
+      "black",
+      "blanchedalmond",
+      "blue",
+      "blueviolet",
+      "brown",
+      "burlywood",
+      "cadetblue",
+      "chartreuse",
+      "chocolate",
+      "coral",
+      "cornflowerblue",
+      "cornsilk",
+      "crimson",
+      "cyan",
+      "darkblue",
+      "darkcyan",
+      "darkgoldenrod",
+      "darkgreen",
+      "darkkhaki",
+      "darkmagenta",
+      "darkolivegreen",
+      "darkorange",
+      "darkorchid",
+      "darkred",
+      "darksalmon",
+      "darkseagreen",
+      "darkslateblue",
+      "darkturquoise",
+      "darkviolet",
+      "deeppink",
+      "deepskyblue",
+      "dodgerblue",
+      "firebrick",
+      "forestgreen",
+      "fuchsia",
+      "gainsboro",
+      "gold",
+      "goldenrod",
+      "green",
+      "greenyellow",
+      "hotpink",
+      "indianred",
+      "indigo",
+      "khaki",
+      "lavender",
+      "lavenderblush",
+      "lawngreen",
+      "lightblue",
+      "lightcoral",
+      "lightgreen",
+      "lightpink",
+      "lightsalmon",
+      "lightseagreen",
+      "lightskyblue",
+      "lightsteelblue",
+      "lime",
+      "limegreen",
+      "magenta",
+      "maroon",
+      "mediumaquamarine",
+      "mediumblue",
+      "mediumorchid",
+      "mediumpurple",
+      "mediumseagreen",
+      "mediumslateblue",
+      "mediumspringgreen",
+      "mediumturquoise",
+      "mediumvioletred",
+      "midnightblue",
+      "mistyrose",
+      "moccasin",
+      "navy",
+      "olive",
+      "olivedrab",
+      "orange",
+      "orangered",
+      "orchid",
+      "palegoldenrod",
+      "palegreen",
+      "paleturquoise",
+      "palevioletred",
+      "papayawhip",
+      "peachpuff",
+      "peru",
+      "pink",
+      "plum",
+      "powderblue",
+      "purple",
+      "red",
+      "rosybrown",
+      "royalblue",
+      "saddlebrown",
+      "salmon",
+      "sandybrown",
+      "seagreen",
+      "sienna",
+      "silver",
+      "skyblue",
+      "slateblue",
+      "slategray",
+      "springgreen",
+      "steelblue",
+      "tan",
+      "teal",
+      "thistle",
+      "tomato",
+      "turquoise",
+      "violet",
+      "yellow",
+      "yellowgreen"
+    ]
+
+    @buddyCursorColours = []
 
   deactivate: ->
     @subscriptions.dispose()
@@ -63,8 +178,6 @@ module.exports = Pusht =
         value = @configView[key].getText()
         atom.config.set(key, value) unless value.length is 0
       @configPanel.hide()
-
-
 
   joinSession: ->
     @joinView = new InputView("Enter the session ID here:")
@@ -103,7 +216,6 @@ module.exports = Pusht =
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
-      @members = 1
       @startPairing()
 
   inviteOverHipChat: ->
@@ -137,30 +249,38 @@ module.exports = Pusht =
     hc_client.postMessage params, (data) =>
       alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
       atom.workspace.addModalPanel(item: alertView, visible: true)
-      @members = 1
       @startPairing()
 
 
   startPairing: ->
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
-
     triggerPush = true
-
     @editor = atom.workspace.getActiveEditor()
     buffer = @editor.buffer
+    @styleCursor()
 
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
-        user_id: "user"
+        user_id: (@cursorColour = _.sample @cursorColours)
 
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-      @pairingChannel.trigger 'client-joined', {joined: true}
+
+      takenColours = _.pluck members, "id"
+
+      if _.contains(takenColours, @cursorColour) then @cursorColour = _.sample(_.difference(@cursorColours, takenColours))
+
+      _.each takenColours, (colour) =>
+        newCursor = @editor.addCursorAtBufferPosition [0,0]
+        @buddyCursorColours.push {cursor: newCursor, colour: colour}
+
+      @cursorColour = _.sample(@cursorColours)
+      @styleCursor()
+      @pairingChannel.trigger 'client-joined', {color: @cursorColour}
 
     @pairingChannel.bind 'client-joined', (data) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
@@ -185,29 +305,42 @@ module.exports = Pusht =
       triggerPush = true
 
     @pairingChannel.bind 'client-change', (data) =>
-
       newRange = Range.fromObject(data.event.newRange)
       oldRange = Range.fromObject(data.event.oldRange)
       newText = data.event.newText
+
+      agentCursor = _.findWhere(@buddyCursorColours, data.cursorColour).cursor
 
       triggerPush = false
 
       if data.deletion
         buffer.delete oldRange
         @editor.scrollToBufferPosition(oldRange.start)
+        agentCursor.setBufferPosition(oldRange.start)
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
         @editor.scrollToBufferPosition(oldRange.start)
+        agentCursor.setBufferPosition(oldRange.start)
       else
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
+        agentCursor.setBufferPosition(newRange.end)
 
       triggerPush = true
 
     buffer.onDidChange (event) =>
       return unless triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
+      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, cursorColour: @cursorColour}
+
+  styleCursor: ->
+    @setCursorColour(@cursorColour)
+    @editor.getCursor().marker.onDidChange => @setCursorColour(@cursorColour)
+
+  setCursorColour: ->
+    _.each document.getElementsByClassName('cursor'), (cursor) =>
+      cursor.style.borderColor = @cursorColour
+      cursor.style.borderWidth = '2px'
 
   syncGrammars: ->
     @editor.on 'grammar-changed', => @sendGrammar()
