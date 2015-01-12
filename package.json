@@ -1,7 +1,7 @@
 {
   "name": "pusher-pair",
   "main": "./lib/pusht",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "A short description of your package",
   "activationCommands": {
     "atom-workspace": [
