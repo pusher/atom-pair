@@ -8,6 +8,7 @@ require './pusher/pusher-js-client-auth'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
+$ = require 'jquery'
 chunkString = require './helpers/chunk-string'
 
 HipChat = require 'node-hipchat'
@@ -34,7 +35,7 @@ module.exports = Pusht =
     atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
-    @cursorColours = [
+    @colours = [
       "aqua",
       "aquamarine",
       "beige",
@@ -151,7 +152,7 @@ module.exports = Pusht =
       "yellowgreen"
     ]
 
-    @buddyCursorColours = []
+    @buddyMarkers = []
 
   deactivate: ->
     @subscriptions.dispose()
@@ -188,6 +189,9 @@ module.exports = Pusht =
       @sessionId = @joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
+      excludeColourIndex = keys[3]
+      colourIndex = _.without(_.range(@colours.length), excludeColourIndex)
+      @markerColour = @colours[colourIndex]
       @joinPanel.hide()
       @startPairing()
 
@@ -212,7 +216,9 @@ module.exports = Pusht =
       alertView = new AlertView "Please set your Pusher keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
-      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
+      colourIndex = _.random(0, @colours.length)
+      @markerColour = @colours[colourIndex]
+      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
@@ -256,31 +262,27 @@ module.exports = Pusht =
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
     triggerPush = true
     @editor = atom.workspace.getActiveEditor()
-    buffer = @editor.buffer
-    @styleCursor()
+
+    atom.views.getView(@editor).setAttribute('id', 'pusht')
+
+    buffer = @buffer = @editor.buffer
+
+    $('atom-text-editor#pusht::shadow .line-number.cursor-line').addClass(@markerColour)
+    @syncMarker()
 
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
-        user_id: (@cursorColour = _.sample @cursorColours)
+        user_id: "user"
 
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
 
-      takenColours = _.pluck members, "id"
+      @pairingChannel.trigger 'client-joined', {joined:true}
 
-      if _.contains(takenColours, @cursorColour) then @cursorColour = _.sample(_.difference(@cursorColours, takenColours))
-
-      _.each takenColours, (colour) =>
-        newCursor = @editor.addCursorAtBufferPosition [0,0]
-        @buddyCursorColours.push {cursor: newCursor, colour: colour}
-
-      @cursorColour = _.sample(@cursorColours)
-      @styleCursor()
-      @pairingChannel.trigger 'client-joined', {color: @cursorColour}
 
     @pairingChannel.bind 'client-joined', (data) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
@@ -288,6 +290,7 @@ module.exports = Pusht =
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
+
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
@@ -309,38 +312,24 @@ module.exports = Pusht =
       oldRange = Range.fromObject(data.event.oldRange)
       newText = data.event.newText
 
-      agentCursor = _.findWhere(@buddyCursorColours, data.cursorColour).cursor
-
       triggerPush = false
 
       if data.deletion
         buffer.delete oldRange
         @editor.scrollToBufferPosition(oldRange.start)
-        agentCursor.setBufferPosition(oldRange.start)
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
         @editor.scrollToBufferPosition(oldRange.start)
-        agentCursor.setBufferPosition(oldRange.start)
       else
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
-        agentCursor.setBufferPosition(newRange.end)
 
       triggerPush = true
 
     buffer.onDidChange (event) =>
       return unless triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, cursorColour: @cursorColour}
-
-  styleCursor: ->
-    @setCursorColour(@cursorColour)
-    @editor.getCursor().marker.onDidChange => @setCursorColour(@cursorColour)
-
-  setCursorColour: ->
-    _.each document.getElementsByClassName('cursor'), (cursor) =>
-      cursor.style.borderColor = @cursorColour
-      cursor.style.borderWidth = '2px'
+      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, cursorColour: @gutterColour}
 
   syncGrammars: ->
     @editor.on 'grammar-changed', => @sendGrammar()
@@ -348,6 +337,21 @@ module.exports = Pusht =
   sendGrammar: ->
     grammar = @editor.getGrammar()
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
+
+  syncMarker: ->
+
+    lineCount = @editor.getLineCount()
+    @editor.onDidStopChanging =>
+      if (@editor.getLastBufferRow() + 1) > lineCount
+        newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
+        $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+        lineCount = @editor.getLineCount()
+
+    @editor.onDidChangeCursorPosition (event) =>
+      if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
+        newLineNumber = event.newBufferPosition.toArray()[0]
+        $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+
 
   shareCurrentFile: (buffer)->
     currentFile = buffer.getText()
