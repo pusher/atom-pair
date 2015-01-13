@@ -35,124 +35,8 @@ module.exports = Pusht =
     atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
-    @colours = [
-      "aqua",
-      "aquamarine",
-      "beige",
-      "bisque",
-      "black",
-      "blanchedalmond",
-      "blue",
-      "blueviolet",
-      "brown",
-      "burlywood",
-      "cadetblue",
-      "chartreuse",
-      "chocolate",
-      "coral",
-      "cornflowerblue",
-      "cornsilk",
-      "crimson",
-      "cyan",
-      "darkblue",
-      "darkcyan",
-      "darkgoldenrod",
-      "darkgreen",
-      "darkkhaki",
-      "darkmagenta",
-      "darkolivegreen",
-      "darkorange",
-      "darkorchid",
-      "darkred",
-      "darksalmon",
-      "darkseagreen",
-      "darkslateblue",
-      "darkturquoise",
-      "darkviolet",
-      "deeppink",
-      "deepskyblue",
-      "dodgerblue",
-      "firebrick",
-      "forestgreen",
-      "fuchsia",
-      "gainsboro",
-      "gold",
-      "goldenrod",
-      "green",
-      "greenyellow",
-      "hotpink",
-      "indianred",
-      "indigo",
-      "khaki",
-      "lavender",
-      "lavenderblush",
-      "lawngreen",
-      "lightblue",
-      "lightcoral",
-      "lightgreen",
-      "lightpink",
-      "lightsalmon",
-      "lightseagreen",
-      "lightskyblue",
-      "lightsteelblue",
-      "lime",
-      "limegreen",
-      "magenta",
-      "maroon",
-      "mediumaquamarine",
-      "mediumblue",
-      "mediumorchid",
-      "mediumpurple",
-      "mediumseagreen",
-      "mediumslateblue",
-      "mediumspringgreen",
-      "mediumturquoise",
-      "mediumvioletred",
-      "midnightblue",
-      "mistyrose",
-      "moccasin",
-      "navy",
-      "olive",
-      "olivedrab",
-      "orange",
-      "orangered",
-      "orchid",
-      "palegoldenrod",
-      "palegreen",
-      "paleturquoise",
-      "palevioletred",
-      "papayawhip",
-      "peachpuff",
-      "peru",
-      "pink",
-      "plum",
-      "powderblue",
-      "purple",
-      "red",
-      "rosybrown",
-      "royalblue",
-      "saddlebrown",
-      "salmon",
-      "sandybrown",
-      "seagreen",
-      "sienna",
-      "silver",
-      "skyblue",
-      "slateblue",
-      "slategray",
-      "springgreen",
-      "steelblue",
-      "tan",
-      "teal",
-      "thistle",
-      "tomato",
-      "turquoise",
-      "violet",
-      "yellow",
-      "yellowgreen"
-    ]
-
-    @buddyMarkers = []
+    @colours = require('./helpers/colour-list')
+    @friendColours = []
 
   deactivate: ->
     @subscriptions.dispose()
@@ -189,14 +73,22 @@ module.exports = Pusht =
       @sessionId = @joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
-      excludeColourIndex = keys[3]
-      console.log excludeColourIndex
-      colourIndex = _.without(_.range(@colours.length), excludeColourIndex)
-      console.log colourIndex
-      @markerColour = @colours[colourIndex]
-      console.log @markerColour
+
+      takenColour = @colours[keys[3]]
+      @assignColour(takenColour)
+      # @addMarker 0, t
+
       @joinPanel.hide()
       @startPairing()
+
+  assignColour: (takenColour) ->
+    colour = _.sample(@colours)
+    if colour is takenColour then assignColour()
+
+    data = {colour: takenColour}
+    @receiveFriendInfo(data)
+    @markerColour = colour
+
 
   getKeysFromConfig: ->
     @app_key = atom.config.get 'pusher_app_key'
@@ -285,15 +177,19 @@ module.exports = Pusht =
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
       @pairingChannel.trigger 'client-joined', {colour: @markerColour}
 
-
     @pairingChannel.bind 'client-joined', (data) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
       atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
-      # @addMarker 0, data.colour
 
+      @receiveFriendInfo(data)
+
+      @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
+
+    @pairingChannel.bind 'client-broadcast-initial-marker', (data) =>
+      @receiveFriendInfo(data)
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
@@ -334,6 +230,14 @@ module.exports = Pusht =
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
       @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, cursorColour: @gutterColour}
 
+  receiveFriendInfo: (data) ->
+    friendInfo = {colour: data.colour}
+    unless _.contains(@friendColours, friendInfo.colour)
+      @friendColours.push(data.colour)
+    unless friendInfo.markerSeen
+      @addMarker 0, data.colour
+      friendInfo.markerSeen = true
+
   syncGrammars: ->
     @editor.on 'grammar-changed', => @sendGrammar()
 
@@ -343,7 +247,6 @@ module.exports = Pusht =
 
   syncMarker: ->
     target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
-    console.log target
     observer = new MutationObserver (mutations) =>
       newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
       @clearMyMarkers()
@@ -352,7 +255,7 @@ module.exports = Pusht =
     config = {attributes: true, childList: true, characterData: true}
 
     observer.observe target, config
-  
+
     @editor.onDidChangeCursorPosition (event) =>
       if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
         newLineNumber = event.newBufferPosition.toArray()[0]
