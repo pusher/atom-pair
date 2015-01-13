@@ -190,8 +190,11 @@ module.exports = Pusht =
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       excludeColourIndex = keys[3]
+      console.log excludeColourIndex
       colourIndex = _.without(_.range(@colours.length), excludeColourIndex)
+      console.log colourIndex
       @markerColour = @colours[colourIndex]
+      console.log @markerColour
       @joinPanel.hide()
       @startPairing()
 
@@ -341,16 +344,32 @@ module.exports = Pusht =
   syncMarker: ->
 
     lineCount = @editor.getLineCount()
-    @editor.onDidStopChanging =>
-      if (@editor.getLastBufferRow() + 1) > lineCount
-        newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
-        $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
-        lineCount = @editor.getLineCount()
+    @editor.onDidChange =>
+      setTimeout =>
+        if (@editor.getLastBufferRow() + 1) > lineCount
+          newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
+          $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+            $(line).removeClass(@markerColour)
+
+          $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+          lineCount = @editor.getLineCount()
+      , 100
 
     @editor.onDidChangeCursorPosition (event) =>
       if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
         newLineNumber = event.newBufferPosition.toArray()[0]
+
+        $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+          $(line).removeClass(@markerColour)
+
         $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+
+    @editor.onDidChangeSelectionRange (event) =>
+      rows = event.newBufferRange.getRows()
+      $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+        $(line).removeClass(@markerColour)
+      _.each rows, (row) =>
+        $("atom-text-editor#pusht::shadow .line-number-#{row}").addClass(@markerColour)
 
 
   shareCurrentFile: (buffer)->
