@@ -284,7 +284,7 @@ module.exports = Pusht =
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
 
-      @pairingChannel.trigger 'client-joined', {joined:true}
+      @pairingChannel.trigger 'client-joined', {colour: @markerColour}
 
 
     @pairingChannel.bind 'client-joined', (data) =>
@@ -348,29 +348,29 @@ module.exports = Pusht =
       setTimeout =>
         if (@editor.getLastBufferRow() + 1) > lineCount
           newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
-          $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
-            $(line).removeClass(@markerColour)
-
-          $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+          @clearMyMarkers()
+          @addMarker(newLineNumber, @markerColour)
           lineCount = @editor.getLineCount()
       , 100
 
     @editor.onDidChangeCursorPosition (event) =>
       if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
         newLineNumber = event.newBufferPosition.toArray()[0]
-
-        $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
-          $(line).removeClass(@markerColour)
-
-        $("atom-text-editor#pusht::shadow .line-number-#{newLineNumber}").addClass(@markerColour)
+        @clearMyMarkers()
+        @addMarker(newLineNumber, @markerColour)
 
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
-      $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
-        $(line).removeClass(@markerColour)
+      @clearMyMarkers()
       _.each rows, (row) =>
-        $("atom-text-editor#pusht::shadow .line-number-#{row}").addClass(@markerColour)
+        @addMarker(row, @markerColour)
 
+  clearMyMarkers: ->
+    $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+      $(line).removeClass(@markerColour)
+
+  addMarker: (line, colour) ->
+    $("atom-text-editor#pusht::shadow .line-number-#{line}").addClass(colour)
 
   shareCurrentFile: (buffer)->
     currentFile = buffer.getText()
