@@ -283,7 +283,6 @@ module.exports = Pusht =
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-
       @pairingChannel.trigger 'client-joined', {colour: @markerColour}
 
 
@@ -293,6 +292,7 @@ module.exports = Pusht =
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
+      # @addMarker 0, data.colour
 
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
@@ -342,17 +342,17 @@ module.exports = Pusht =
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
 
   syncMarker: ->
+    target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
+    console.log target
+    observer = new MutationObserver (mutations) =>
+      newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
+      @clearMyMarkers()
+      @addMarker(newLineNumber, @markerColour)
 
-    lineCount = @editor.getLineCount()
-    @editor.onDidChange =>
-      setTimeout =>
-        if (@editor.getLastBufferRow() + 1) > lineCount
-          newLineNumber = @editor.getCursorBufferPosition().toArray()[0]
-          @clearMyMarkers()
-          @addMarker(newLineNumber, @markerColour)
-          lineCount = @editor.getLineCount()
-      , 100
+    config = {attributes: true, childList: true, characterData: true}
 
+    observer.observe target, config
+  
     @editor.onDidChangeCursorPosition (event) =>
       if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
         newLineNumber = event.newBufferPosition.toArray()[0]
