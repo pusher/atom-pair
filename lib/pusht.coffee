@@ -161,8 +161,8 @@ module.exports = Pusht =
 
     buffer = @buffer = @editor.buffer
 
-    $('atom-text-editor#pusht::shadow .line-number.cursor-line').addClass(@markerColour)
-    @syncMarker()
+    # $('atom-text-editor#pusht::shadow .line-number.cursor-line').addClass(@markerColour)
+    # @syncMarker()
 
     @pusher = new Pusher @app_key,
       authTransport: 'client'
@@ -190,12 +190,9 @@ module.exports = Pusht =
     @pairingChannel.bind 'client-broadcast-initial-marker', (data) =>
       @receiveFriendInfo(data)
 
-    @pairingChannel.bind 'client-cursor-moved', (data) =>
+    @pairingChannel.bind 'client-text-select', (data) =>
       @clearMarkers(data.colour)
-      console.log 'receiving cursor event'
-      console.log data
-
-      if data.selection then @markRows(data.rows, data.colour, false) else @addMarker(data.line, data.colour)
+      @markRows(data.rows, data.colour)
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
@@ -219,28 +216,41 @@ module.exports = Pusht =
 
       triggerPush = false
 
-      cursorPosition = @editor.getCursorBufferPosition().toArray()
-      cursor = @editor.getCursor()
+      @clearMarkers(data.colour)
+
 
       if data.deletion
         buffer.delete oldRange
         @editor.scrollToBufferPosition(oldRange.start)
-        cursor.setBufferPosition(cursorPosition)
+        @addMarker oldRange.start.toArray()[0], data.colour
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
         @editor.scrollToBufferPosition(oldRange.start)
-        cursor.setBufferPosition(cursorPosition)
+        @addMarker oldRange.start.toArray()[0], data.colour
       else
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
-        cursor.setBufferPosition(cursorPosition)
+        @addMarker newRange.start.toArray()[0], data.colour
 
       triggerPush = true
 
     buffer.onDidChange (event) =>
       return unless triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, cursorColour: @gutterColour}
+      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
+
+    @editor.onDidChangeSelectionRange (event) =>
+      # if @editor.getSelectedText() isnt ""
+      # console.log event
+      console.log(event.newBufferRange.isEqual(event.oldBufferRange))
+
+      console.log event.oldBufferRange.serialize()
+      console.log event.newBufferRange.serialize()
+
+      rows = event.newBufferRange.getRows()
+      @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
+
+
 
   receiveFriendInfo: (data) ->
     friendInfo = {colour: data.colour}
@@ -257,42 +267,8 @@ module.exports = Pusht =
     grammar = @editor.getGrammar()
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
 
-  syncMarker: ->
-
-    lastScreenRow = @editor.getLastScreenRow()
-
-    @editor.onDidChangeCursorPosition (event) =>
-      if event.newBufferPosition.toArray()[0] isnt event.oldBufferPosition.toArray()[0]
-        newLineNumber = @editor.getCursorScreenRow()
-        if @editor.getCursorScreenRow() > lastScreenRow
-          console.log 'expansion'
-          target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
-          self = @
-          observer = new MutationObserver (mutations) ->
-            console.log mutations
-            self.clearMarkers(self.markerColour)
-            self.addMarker(newLineNumber, self.markerColour)
-            self.pairingChannel.trigger 'client-cursor-moved', {colour: self.markerColour, line: newLineNumber}
-            @disconnect()
-          config = {attributes: true, childList: true, characterData: true}
-          observer.observe target, config
-        else if @editor.getSelectedText() isnt ""
-          console.log 'selection'
-          rows = @editor.getSelectedBufferRange().getRows()
-          @clearMarkers(@markerColour)
-          @markRows(rows, @markerColour)
-        else
-          console.log 'movement'
-          @clearMarkers(@markerColour)
-          @addMarker(newLineNumber, @markerColour)
-          @pairingChannel.trigger 'client-cursor-moved', {colour: @markerColour, line: newLineNumber}
-        lastScreenRow = @editor.getLastScreenRow()
-
-
-  markRows: (rows, colour, triggerEnabled = true) ->
+  markRows: (rows, colour) ->
     _.each rows, (row) => @addMarker(row, colour)
-    console.log 'sending selection'
-    if triggerEnabled then @pairingChannel.trigger 'client-cursor-moved', {colour: @markerColour, selection: true, rows: rows}
 
   clearMarkers: (colour)->
     $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
