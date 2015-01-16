@@ -8,6 +8,7 @@ require './pusher/pusher-js-client-auth'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
+$ = require 'jquery'
 chunkString = require './helpers/chunk-string'
 
 HipChat = require 'node-hipchat'
@@ -28,21 +29,21 @@ module.exports = Pusht =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @joinSession()
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:set configuration keys': => @setConfig()
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:invite over hipchat': => @inviteOverHipChat()
 
     atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
-
     atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
 
+    @colours = require('./helpers/colour-list')
+    @friendColours = []
 
   deactivate: ->
     @subscriptions.dispose()
 
   disconnect: ->
     @pusher.disconnect()
+    @clearMarkers(@markerColour)
     @hidePanel()
 
   serialize: ->
@@ -64,8 +65,6 @@ module.exports = Pusht =
         atom.config.set(key, value) unless value.length is 0
       @configPanel.hide()
 
-
-
   joinSession: ->
     @joinView = new InputView("Enter the session ID here:")
     @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
@@ -75,8 +74,21 @@ module.exports = Pusht =
       @sessionId = @joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
+
+      takenColour = @colours[keys[3]]
+      @assignColour(takenColour)
+
       @joinPanel.hide()
       @startPairing()
+
+  assignColour: (takenColour) ->
+    colour = _.sample(@colours)
+    if colour is takenColour then assignColour()
+
+    data = {colour: takenColour}
+    @receiveFriendInfo(data)
+    @markerColour = colour
+
 
   getKeysFromConfig: ->
     @app_key = atom.config.get 'pusher_app_key'
@@ -99,11 +111,12 @@ module.exports = Pusht =
       alertView = new AlertView "Please set your Pusher keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
-      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
+      colourIndex = _.random(0, @colours.length)
+      @markerColour = @colours[colourIndex]
+      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
-      @members = 1
       @startPairing()
 
   inviteOverHipChat: ->
@@ -137,18 +150,17 @@ module.exports = Pusht =
     hc_client.postMessage params, (data) =>
       alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
       atom.workspace.addModalPanel(item: alertView, visible: true)
-      @members = 1
       @startPairing()
 
 
   startPairing: ->
-
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
-
     triggerPush = true
-
     @editor = atom.workspace.getActiveEditor()
-    buffer = @editor.buffer
+
+    atom.views.getView(@editor).setAttribute('id', 'pusht')
+
+    buffer = @buffer = @editor.buffer
 
     @pusher = new Pusher @app_key,
       authTransport: 'client'
@@ -160,7 +172,7 @@ module.exports = Pusht =
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-      @pairingChannel.trigger 'client-joined', {joined: true}
+      @pairingChannel.trigger 'client-joined', {colour: @markerColour}
 
     @pairingChannel.bind 'client-joined', (data) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
@@ -168,6 +180,17 @@ module.exports = Pusht =
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
+
+      @receiveFriendInfo(data)
+
+      @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
+
+    @pairingChannel.bind 'client-broadcast-initial-marker', (data) =>
+      @receiveFriendInfo(data)
+
+    @pairingChannel.bind 'client-text-select', (data) =>
+      @clearMarkers(data.colour)
+      @markRows(data.rows, data.colour)
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
@@ -185,29 +208,57 @@ module.exports = Pusht =
       triggerPush = true
 
     @pairingChannel.bind 'client-change', (data) =>
-
       newRange = Range.fromObject(data.event.newRange)
       oldRange = Range.fromObject(data.event.oldRange)
       newText = data.event.newText
 
       triggerPush = false
 
+      @clearMarkers(data.colour)
+
+
       if data.deletion
         buffer.delete oldRange
         @editor.scrollToBufferPosition(oldRange.start)
+        @addMarker oldRange.start.toArray()[0], data.colour
       else if oldRange.containsRange(newRange)
         buffer.setTextInRange oldRange, newText
         @editor.scrollToBufferPosition(oldRange.start)
+        @addMarker oldRange.start.toArray()[0], data.colour
       else
+        if newRange.end.toArray()[0] > @editor.getLastBufferRow()
+          target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
+          self = @
+          observer = new MutationObserver (mutations) ->
+            self.addMarker(newRange.end.toArray()[0], data.colour)
+            @disconnect()
+          config = {attributes: true, childList: true, characterData: true}
+          observer.observe(target, config)
+
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
+        # console.log($("atom-text-editor#pusht::shadow .line-number-1"))
+        # @addMarker(newRange.end.toArray()[0], data.colour)
+
 
       triggerPush = true
 
     buffer.onDidChange (event) =>
       return unless triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event}
+      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
+
+    @editor.onDidChangeSelectionRange (event) =>
+      rows = event.newBufferRange.getRows()
+      @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
+
+  receiveFriendInfo: (data) ->
+    friendInfo = {colour: data.colour}
+    unless _.contains(@friendColours, friendInfo.colour)
+      @friendColours.push(data.colour)
+    unless friendInfo.markerSeen
+      @addMarker 0, data.colour
+      friendInfo.markerSeen = true
 
   syncGrammars: ->
     @editor.on 'grammar-changed', => @sendGrammar()
@@ -216,7 +267,18 @@ module.exports = Pusht =
     grammar = @editor.getGrammar()
     @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
 
-  shareCurrentFile: (buffer)->
+  markRows: (rows, colour) ->
+    _.each rows, (row) => @addMarker(row, colour)
+
+  clearMarkers: (colour) ->
+    $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+      $(line).removeClass(colour)
+
+  addMarker: (line, colour) ->
+    console.log(line)
+    $("atom-text-editor#pusht::shadow .line-number-#{line}").addClass(colour)
+
+  shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
     return if currentFile.length is 0
     size = Buffer.byteLength(currentFile, 'utf8')
