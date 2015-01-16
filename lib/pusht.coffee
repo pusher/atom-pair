@@ -43,6 +43,7 @@ module.exports = Pusht =
 
   disconnect: ->
     @pusher.disconnect()
+    @clearMarkers(@markerColour)
     @hidePanel()
 
   serialize: ->
@@ -161,9 +162,6 @@ module.exports = Pusht =
 
     buffer = @buffer = @editor.buffer
 
-    # $('atom-text-editor#pusht::shadow .line-number.cursor-line').addClass(@markerColour)
-    # @syncMarker()
-
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
@@ -228,9 +226,20 @@ module.exports = Pusht =
         @editor.scrollToBufferPosition(oldRange.start)
         @addMarker oldRange.start.toArray()[0], data.colour
       else
+        if newRange.end.toArray()[0] > @editor.getLastBufferRow()
+          target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
+          self = @
+          observer = new MutationObserver (mutations) ->
+            self.addMarker(newRange.end.toArray()[0], data.colour)
+            @disconnect()
+          config = {attributes: true, childList: true, characterData: true}
+          observer.observe(target, config)
+
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
-        @addMarker newRange.start.toArray()[0], data.colour
+        # console.log($("atom-text-editor#pusht::shadow .line-number-1"))
+        # @addMarker(newRange.end.toArray()[0], data.colour)
+
 
       triggerPush = true
 
@@ -240,17 +249,8 @@ module.exports = Pusht =
       @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
 
     @editor.onDidChangeSelectionRange (event) =>
-      # if @editor.getSelectedText() isnt ""
-      # console.log event
-      console.log(event.newBufferRange.isEqual(event.oldBufferRange))
-
-      console.log event.oldBufferRange.serialize()
-      console.log event.newBufferRange.serialize()
-
       rows = event.newBufferRange.getRows()
       @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
-
-
 
   receiveFriendInfo: (data) ->
     friendInfo = {colour: data.colour}
@@ -270,14 +270,15 @@ module.exports = Pusht =
   markRows: (rows, colour) ->
     _.each rows, (row) => @addMarker(row, colour)
 
-  clearMarkers: (colour)->
+  clearMarkers: (colour) ->
     $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
       $(line).removeClass(colour)
 
   addMarker: (line, colour) ->
+    console.log(line)
     $("atom-text-editor#pusht::shadow .line-number-#{line}").addClass(colour)
 
-  shareCurrentFile: (buffer)->
+  shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
     return if currentFile.length is 0
     size = Buffer.byteLength(currentFile, 'utf8')
