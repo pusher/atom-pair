@@ -5,6 +5,7 @@ AlertView = require './views/alert-view'
 
 require './pusher/pusher'
 require './pusher/pusher-js-client-auth'
+request = require 'request'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
@@ -171,7 +172,8 @@ module.exports = Pusht =
         secret: @app_secret
         user_id: "user"
 
-    @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
+    @channelName = "presence-session-#{@sessionId}"
+    @pairingChannel = @pusher.subscribe(@channelName)
 
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
       @pairingChannel.trigger 'client-joined', {colour: @markerColour}
@@ -206,7 +208,11 @@ module.exports = Pusht =
       buffer.append(chunk)
       @triggerPush = true
 
-    @pairingChannel.bind 'client-change', (data) => @changeBuffer(data)
+    @pairingChannel.bind 'friend-typed', (data) =>
+      return if data.colour is @markerColour
+      # console.log(data)
+      # @triggerpush
+      @changeBuffer(data)
 
     # @pairingChannel.bind 'client-disconnected', (data) =>
     #   @clearMarkers(data.colour)
@@ -221,12 +227,27 @@ module.exports = Pusht =
     @buffer.onDidChange (event) =>
       return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
+      # event = {newRange: event.newRange.serialize(), oldRange: event.oldRange.serialize(), newText: event.newText}
+      # console.log(event)
+      # console.log(event.newRange.serialize())
+      # newRange = {start: event.newRange.start.toArray(), end: event.newRange.end.toArray()}
+      # oldRange = {start: event.oldRange.start.toArray(), end: event.oldRange.end.toArray()}
+      data = {newRange: event.newRange.serialize(), oldRange: event.oldRange.serialize(), newText: event.newText, deletion: deletion, colour: @markerColour, channel: @channelName}
+      # data = {newR}
+      # data = JSON.stringify(data)
+      # $.post('http://localhost:3000/session/message', data)
+      # @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
+      options = {
+        headers: {'content-type': 'application/json'},
+        url: 'http://pusher-pair.ngrok.com/session/message',
+        body: JSON.stringify(data),
+      }
+      request.post(options, (error, response, body) -> console.log('done'))
 
   changeBuffer: (data) ->
-    newRange = Range.fromObject(data.event.newRange)
-    oldRange = Range.fromObject(data.event.oldRange)
-    newText = data.event.newText
+    newRange = Range.fromObject(data.newRange)
+    oldRange = Range.fromObject(data.oldRange)
+    newText = data.newText
 
     @triggerPush = false
 
