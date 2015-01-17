@@ -92,8 +92,8 @@ module.exports = Pusht =
 
 
   getKeysFromConfig: ->
-    @app_key = atom.config.get 'pusher_app_key'
-    @app_secret = atom.config.get 'pusher_app_secret'
+    @app_key = atom.config.get('pusher_app_key') || 'd41a439c438a100756f5'
+    @app_secret = atom.config.get('pusher_app_secret') || '4bf35003e819bb138249'
     @hc_key = atom.config.get 'hipchat_token'
     @room_id = atom.config.get 'hipchat_room_id'
 
@@ -229,7 +229,6 @@ module.exports = Pusht =
       else
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
-        # console.log($("atom-text-editor#pusht::shadow .line-number-1"))
         @addMarker(newRange.end.toArray()[0], data.colour)
 
 
