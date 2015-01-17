@@ -37,6 +37,7 @@ module.exports = Pusht =
 
     @colours = require('./helpers/colour-list')
     @friendColours = []
+    @timeouts = []
 
   deactivate: ->
     @subscriptions.dispose()
@@ -226,19 +227,10 @@ module.exports = Pusht =
         @editor.scrollToBufferPosition(oldRange.start)
         @addMarker oldRange.start.toArray()[0], data.colour
       else
-        if newRange.end.toArray()[0] > @editor.getLastBufferRow()
-          target = $('atom-text-editor#pusht::shadow .line-numbers')[0]
-          self = @
-          observer = new MutationObserver (mutations) ->
-            self.addMarker(newRange.end.toArray()[0], data.colour)
-            @disconnect()
-          config = {attributes: true, childList: true, characterData: true}
-          observer.observe(target, config)
-
         buffer.insert newRange.start, newText
         @editor.scrollToBufferPosition(newRange.start)
         # console.log($("atom-text-editor#pusht::shadow .line-number-1"))
-        # @addMarker(newRange.end.toArray()[0], data.colour)
+        @addMarker(newRange.end.toArray()[0], data.colour)
 
 
       triggerPush = true
@@ -250,6 +242,7 @@ module.exports = Pusht =
 
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
+      return unless rows.length > 1
       @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
 
   receiveFriendInfo: (data) ->
@@ -275,8 +268,13 @@ module.exports = Pusht =
       $(line).removeClass(colour)
 
   addMarker: (line, colour) ->
-    console.log(line)
-    $("atom-text-editor#pusht::shadow .line-number-#{line}").addClass(colour)
+    element = $("atom-text-editor#pusht::shadow .line-number-#{line}")
+    if element.length is 0
+      @timeouts.push(setTimeout((=> @addMarker(line,colour)), 50))
+    else
+      _.each @timeouts, (timeout) -> clearTimeout(timeout)
+      element.addClass(colour)
+
 
   shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
