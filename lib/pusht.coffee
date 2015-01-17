@@ -43,8 +43,10 @@ module.exports = Pusht =
     @subscriptions.dispose()
 
   disconnect: ->
+    # @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
     @pusher.disconnect()
-    @clearMarkers(@markerColour)
+    _.each @friendColours, (colour) => @clearMarkers(colour)
+    atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
 
   serialize: ->
@@ -156,9 +158,8 @@ module.exports = Pusht =
 
   startPairing: ->
     @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
-    triggerPush = true
+    @triggerPush = true
     @editor = atom.workspace.getActiveEditor()
-
     atom.views.getView(@editor).setAttribute('id', 'pusht')
 
     buffer = @buffer = @editor.buffer
@@ -181,13 +182,10 @@ module.exports = Pusht =
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
-
       @receiveFriendInfo(data)
-
       @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
 
-    @pairingChannel.bind 'client-broadcast-initial-marker', (data) =>
-      @receiveFriendInfo(data)
+    @pairingChannel.bind 'client-broadcast-initial-marker', (data) => @receiveFriendInfo(data)
 
     @pairingChannel.bind 'client-text-select', (data) =>
       @clearMarkers(data.colour)
@@ -198,47 +196,58 @@ module.exports = Pusht =
       @editor.setGrammar(grammar)
       @syncGrammars()
 
-    @pairingChannel.bind 'client-share-whole-file', (file) ->
-      triggerPush = false
+    @pairingChannel.bind 'client-share-whole-file', (file) =>
+      @triggerPush = false
       buffer.setText(file)
-      triggerPush = true
+      @triggerPush = true
 
-    @pairingChannel.bind 'client-share-partial-file', (chunk) ->
-      triggerPush = false
+    @pairingChannel.bind 'client-share-partial-file', (chunk) =>
+      @triggerPush = false
       buffer.append(chunk)
-      triggerPush = true
+      @triggerPush = true
 
-    @pairingChannel.bind 'client-change', (data) =>
-      newRange = Range.fromObject(data.event.newRange)
-      oldRange = Range.fromObject(data.event.oldRange)
-      newText = data.event.newText
+    @pairingChannel.bind 'client-change', (data) => @changeBuffer(data)
 
-      triggerPush = false
-
-      @clearMarkers(data.colour)
+    # @pairingChannel.bind 'client-disconnected', (data) =>
+    #   @clearMarkers(data.colour)
+    #   disconnectView = new AlertView "Your pair buddy has left the session."
+    #   atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
 
-      if data.deletion
-        buffer.delete oldRange
-        @editor.scrollToBufferPosition(oldRange.start)
-        @addMarker oldRange.start.toArray()[0], data.colour
-      else if oldRange.containsRange(newRange)
-        buffer.setTextInRange oldRange, newText
-        @editor.scrollToBufferPosition(oldRange.start)
-        @addMarker oldRange.start.toArray()[0], data.colour
-      else
-        buffer.insert newRange.start, newText
-        @editor.scrollToBufferPosition(newRange.start)
-        @addMarker(newRange.end.toArray()[0], data.colour)
+    @listenToBufferChanges()
+    @syncSelectionRange()
 
-
-      triggerPush = true
-
-    buffer.onDidChange (event) =>
-      return unless triggerPush
+  listenToBufferChanges: ->
+    @buffer.onDidChange (event) =>
+      return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
       @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
 
+  changeBuffer: (data) ->
+    newRange = Range.fromObject(data.event.newRange)
+    oldRange = Range.fromObject(data.event.oldRange)
+    newText = data.event.newText
+
+    @triggerPush = false
+
+    @clearMarkers(data.colour)
+
+    if data.deletion
+      @buffer.delete oldRange
+      @editor.scrollToBufferPosition(oldRange.start)
+      @addMarker oldRange.start.toArray()[0], data.colour
+    else if oldRange.containsRange(newRange)
+      @buffer.setTextInRange oldRange, newText
+      @editor.scrollToBufferPosition(oldRange.start)
+      @addMarker oldRange.start.toArray()[0], data.colour
+    else
+      @buffer.insert newRange.start, newText
+      @editor.scrollToBufferPosition(newRange.start)
+      @addMarker(newRange.end.toArray()[0], data.colour)
+
+    @triggerPush = true
+
+  syncSelectionRange: ->
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
