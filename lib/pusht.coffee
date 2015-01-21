@@ -93,6 +93,13 @@ module.exports = Pusht =
     @receiveFriendInfo(data)
     @markerColour = colour
 
+  receiveFriendInfo: (data) ->
+    friendInfo = {colour: data.colour}
+    unless _.contains(@friendColours, friendInfo.colour)
+      @friendColours.push(data.colour)
+    unless friendInfo.markerSeen
+      @addMarker 0, data.colour
+      friendInfo.markerSeen = true
 
   getKeysFromConfig: ->
     @app_key = atom.config.get('pusher_app_key') || 'd41a439c438a100756f5'
@@ -115,13 +122,16 @@ module.exports = Pusht =
       alertView = new AlertView "Please set your Pusher keys."
       atom.workspace.addModalPanel(item: alertView, visible: true)
     else
-      colourIndex = _.random(0, @colours.length)
-      @markerColour = @colours[colourIndex]
-      @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
+      @generateSessionId()
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
       @startPairing()
+
+  generateSessionId: ->
+    colourIndex = _.random(0, @colours.length)
+    @markerColour = @colours[colourIndex]
+    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
 
   inviteOverHipChat: ->
     @getKeysFromConfig()
@@ -141,9 +151,10 @@ module.exports = Pusht =
         invitePanel.hide()
 
   sendHipChatMessageTo: (mentionName) ->
+    if mentionName[0] isnt "@" then mentionName = ("@" + mentionName)
     hc_client = new HipChat(@hc_key)
 
-    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
+    @generateSessionId()
 
     params =
       room: @room_id
@@ -259,14 +270,6 @@ module.exports = Pusht =
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
       @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
-
-  receiveFriendInfo: (data) ->
-    friendInfo = {colour: data.colour}
-    unless _.contains(@friendColours, friendInfo.colour)
-      @friendColours.push(data.colour)
-    unless friendInfo.markerSeen
-      @addMarker 0, data.colour
-      friendInfo.markerSeen = true
 
   syncGrammars: ->
     @editor.on 'grammar-changed', => @sendGrammar()
