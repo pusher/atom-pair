@@ -12,3 +12,5 @@
   'escape': 'pusht:hide views'
 'div.session-id':
   'cmd-c': 'pusht:copyid'
+'atom-panel-container.bottom':
+  'escape': 'core:cancel'
