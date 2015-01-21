@@ -38,6 +38,7 @@ module.exports = Pusht =
     @colours = require('./helpers/colour-list')
     @friendColours = []
     @timeouts = []
+    @events = []
 
   deactivate: ->
     @subscriptions.dispose()
@@ -206,14 +207,16 @@ module.exports = Pusht =
       buffer.append(chunk)
       @triggerPush = true
 
-    @pairingChannel.bind 'client-change', (data) => @changeBuffer(data)
+    @pairingChannel.bind 'client-change', (events) =>
+      console.log(events);
+      _.each(events, (event) => @changeBuffer(event) )
 
     # @pairingChannel.bind 'client-disconnected', (data) =>
     #   @clearMarkers(data.colour)
     #   disconnectView = new AlertView "Your pair buddy has left the session."
     #   atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
-
+    @triggerEventQueue()
     @listenToBufferChanges()
     @syncSelectionRange()
 
@@ -221,13 +224,21 @@ module.exports = Pusht =
     @buffer.onDidChange (event) =>
       return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @pairingChannel.trigger 'client-change', {deletion: deletion, event: event, colour: @markerColour}
+      console.log(deletion)
+      @events.push({deletion: deletion, event: event, colour: @markerColour})
+
+  triggerEventQueue: ->
+    setInterval(=>
+      if @events.length > 0
+        @pairingChannel.trigger 'client-change', @events
+        @events = []
+    , 200)
 
   changeBuffer: (data) ->
     newRange = Range.fromObject(data.event.newRange)
     oldRange = Range.fromObject(data.event.oldRange)
     newText = data.event.newText
-
+    console.log(data.deletion)
     @triggerPush = false
 
     @clearMarkers(data.colour)
