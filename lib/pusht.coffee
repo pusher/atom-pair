@@ -232,7 +232,7 @@ module.exports = Pusht =
       if @events.length > 0
         @pairingChannel.trigger 'client-change', @events
         @events = []
-    , 200)
+    , 120)
 
   changeBuffer: (data) ->
     newRange = Range.fromObject(data.event.newRange)
