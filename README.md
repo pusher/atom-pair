@@ -1,4 +1,4 @@
-# pusht package
+# AtomPair
 
 A short description of your package.
 
