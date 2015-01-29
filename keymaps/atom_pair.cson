@@ -8,9 +8,9 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 'atom-workspace':
-  'ctrl-alt-o': 'pusht:toggle'
-  'escape': 'pusht:hide views'
+  'ctrl-alt-o': 'AtomPair:toggle'
+  'escape': 'AtomPair:hide views'
 'div.session-id':
-  'cmd-c': 'pusht:copyid'
+  'cmd-c': 'AtomPair:copyid'
 'atom-panel-container.bottom':
   'escape': 'core:cancel'

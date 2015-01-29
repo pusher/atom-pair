@@ -16,8 +16,8 @@ HipChat = require 'node-hipchat'
 {CompositeDisposable} = require 'atom'
 {Range} = require 'atom'
 
-module.exports = Pusht =
-  pushtView: null
+module.exports = AtomPair =
+  AtomPairView: null
   modalPanel: null
   subscriptions: null
 
@@ -27,13 +27,13 @@ module.exports = Pusht =
     @subscriptions = new CompositeDisposable
 
     # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:start new pairing session': => @startSession()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:join pairing session': => @joinSession()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:set configuration keys': => @setConfig()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:invite over hipchat': => @inviteOverHipChat()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => @startSession()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:set configuration keys': => @setConfig()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
 
-    atom.commands.add 'atom-workspace', 'pusht:hide views': => @hidePanel()
-    atom.commands.add '.session-id', 'pusht:copyid': => @copyId()
+    atom.commands.add 'atom-workspace', 'AtomPair:hide views': => @hidePanel()
+    atom.commands.add '.session-id', 'AtomPair:copyid': => @copyId()
 
     @colours = require('./helpers/colour-list')
     @friendColours = []
@@ -51,7 +51,7 @@ module.exports = Pusht =
     @hidePanel()
 
   serialize: ->
-    pushtViewState: @pushtView.serialize()
+    AtomPairViewState: @AtomPairView.serialize()
 
   copyId: ->
     atom.clipboard.write(@sessionId)
@@ -169,10 +169,10 @@ module.exports = Pusht =
 
 
   startPairing: ->
-    @subscriptions.add atom.commands.add 'atom-workspace', 'pusht:disconnect': => @disconnect()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
     @triggerPush = true
     @editor = atom.workspace.getActiveEditor()
-    atom.views.getView(@editor).setAttribute('id', 'pusht')
+    atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     buffer = @buffer = @editor.buffer
 
@@ -282,11 +282,11 @@ module.exports = Pusht =
     _.each rows, (row) => @addMarker(row, colour)
 
   clearMarkers: (colour) ->
-    $("atom-text-editor#pusht::shadow .line-number").each (index, line) =>
+    $("atom-text-editor#AtomPair::shadow .line-number").each (index, line) =>
       $(line).removeClass(colour)
 
   addMarker: (line, colour) ->
-    element = $("atom-text-editor#pusht::shadow .line-number-#{line}")
+    element = $("atom-text-editor#AtomPair::shadow .line-number-#{line}")
     if element.length is 0
       @timeouts.push(setTimeout((=> @addMarker(line,colour)), 50))
     else
