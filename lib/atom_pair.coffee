@@ -158,8 +158,8 @@ module.exports = AtomPair =
 
     params =
       room: @room_id
-      from: 'PusherPair'
-      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. Go onto Atom, and if you've installed the PusherPair plugin, hit 'Join a pairing session', and enter this string: #{@sessionId}"
+      from: 'AtomPair'
+      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. If you haven't installed the AtomPair plugin, type \`apm install AtomPair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
       message_format: 'text'
 
     hc_client.postMessage params, (data) =>
