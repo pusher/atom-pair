@@ -1,7 +1,7 @@
 {
   "name": "AtomPair",
   "main": "./lib/atom_pair",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "An Atom Package that allows for epic pair programming, powered by Pusher",
   "activationCommands": {
     "atom-workspace": [
