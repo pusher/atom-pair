@@ -18,7 +18,7 @@ First off, install Atom if you haven't already. Now type into your terminal:
 
     $ apm install atom-pair
     
-Alternatively, go to the command palette via `command+shift+p` and go to `Install Packages and Themes`. Then search for and install AtomPair.
+Alternatively, go to the command palette via `command+shift+p` and go to `Install Packages and Themes`. Then search for and install `atom-pair`.
 
 ###Invite
 
@@ -36,7 +36,7 @@ You will be given a session ID, hit `command+c` and paste that to a friend.
 
 ####HipChat
 
-The other way, one that we use quite often, is to invite collaborators over HipChat. We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
+The other way - one that we use quite often - is to invite collaborators over HipChat. We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
 
 If you have admin privileges in a HipChat organization, type `command+shift+p` and go to `AtomPair: Set configuration keys`. Enter your HipChat API key and the room you wish the invitation to be sent through. 
 
@@ -68,7 +68,7 @@ Here is a current list of features:
 * Synchronized syntax highlighting
 * Collaborator visibility.
 
-But if there are any features you find lacking, feel more than welcome to [get in contact with the maintainer](jamie@pusher.com).
+But if there are any features you find lacking, feel more than welcome to [get in touch](jamie@pusher.com).
 
 Happy pairing!
 
