@@ -14,14 +14,15 @@ Therefore, we decided to build **AtomPair**, and now we want to share the ♥.
 
 First off, install Atom if you haven't already. Now type into your terminal:
 
-	$ apm install atom-pair
-	
+    $ apm install atom-pair
+    
+Alternatively, go to the command palette via `command+shift+p` and go to `Install Packages and Themes`. Then search for and install AtomPair.
 
 ###Invite
 
 You can either decide to pair on a blank slate, or on existing code. If you invite somebody to collaborate on existing code, they will see everything you can, and their syntax highlighting will be synchronized with yours.
 
-As detailed below, there are two ways you can invite others. 
+As detailed below, there are two ways you can invite others. Given a free Sandbox plan, there will be a maximum of 20 collaborators per session.
 
 ####Basic
 
@@ -45,7 +46,7 @@ To end a pairing session, go to `AtomPair: Disconnect`, and you will be disconne
 
 ##Free And Open For Everyone
 
-Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. But for security purposes, we encourage you to [create a free account]() and enter your own app key and app secret by going to `AtomPair: Set configuration keys` in the command palette. A Sandbox plan should be more than enough for your pairing sessions.
+Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. But for security purposes, we encourage you to [create a free account]() and enter your own app key and app secret by going to `AtomPair: Set configuration keys` in the command palette. A free Sandbox plan should be more than enough for your pairing sessions.
 
 ###Contributing
 
@@ -60,7 +61,3 @@ Here is a current list of features:
 But if there are any features you find lacking, feel more than welcome to [fork our Github repo]() and send us a pull request.
 
 Happy pairing!
-
- 
-
-
