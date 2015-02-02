@@ -4,11 +4,15 @@
 module.exports =
 class ConfigView extends View
 
-  @content: ->
+  @content: (app_key, app_secret, hc_key, room_name)->
     @div =>
       @div "Enter your Pusher keys here:"
-      @subview 'pusher_app_key', new TextEditorView(mini: true, placeholderText: 'Your app key')
-      @subview 'pusher_app_secret', new TextEditorView(mini: true, placeholderText: 'Your app secret')
+      @small "Your app key"
+      @subview 'pusher_app_key', new TextEditorView(mini: true, placeholderText: app_key)
+      @small "Your app secret"
+      @subview 'pusher_app_secret', new TextEditorView(mini: true, placeholderText: app_secret)
       @p 'Enter HipChat keys here to integrate (optional)'
-      @subview 'hipchat_token', new TextEditorView(mini: true, placeholderText: 'Your HipChat API Access Token (admin)')
-      @subview 'hipchat_room_id', new TextEditorView(mini:true, placeholderText: 'The id of the room for pairing invitations')
+      @small 'Your HipChat API Access Token (admin)'
+      @subview 'hipchat_token', new TextEditorView(mini: true, placeholderText: hc_key)
+      @small 'The name of the room for pairing invitations'
+      @subview 'hipchat_room_name', new TextEditorView(mini:true, placeholderText: room_name)
