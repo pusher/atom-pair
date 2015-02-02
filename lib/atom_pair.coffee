@@ -60,11 +60,12 @@ module.exports = AtomPair =
     _.each atom.workspace.getModalPanels(), (panel) -> panel.hide()
 
   setConfig: ->
-    @configView = new ConfigView
+    @getKeysFromConfig()
+    @configView = new ConfigView(@app_key, @app_secret, @hc_key, @room_name)
     @configPanel = atom.workspace.addModalPanel(item: @configView, visible: true)
 
     @configView.on 'core:confirm', =>
-      _.each ['pusher_app_key', 'pusher_app_secret', 'hipchat_token', 'hipchat_room_id'], (key) =>
+      _.each ['pusher_app_key', 'pusher_app_secret', 'hipchat_token', 'hipchat_room_name'], (key) =>
         value = @configView[key].getText()
         atom.config.set(key, value) unless value.length is 0
       @configPanel.hide()
@@ -105,14 +106,14 @@ module.exports = AtomPair =
     @app_key = atom.config.get('pusher_app_key') || 'd41a439c438a100756f5'
     @app_secret = atom.config.get('pusher_app_secret') || '4bf35003e819bb138249'
     @hc_key = atom.config.get 'hipchat_token'
-    @room_id = atom.config.get 'hipchat_room_id'
+    @room_name = atom.config.get 'hipchat_room_name'
 
   missingPusherKeys: ->
     _.any([@app_key, @app_secret], (key) ->
       typeof(key) is "undefined")
 
   missingHipChatKeys: ->
-    _.any([@hc_key, @room_id], (key) ->
+    _.any([@hc_key, @room_name], (key) ->
       typeof(key) is "undefined")
 
   startSession: ->
@@ -156,16 +157,21 @@ module.exports = AtomPair =
 
     @generateSessionId()
 
-    params =
-      room: @room_id
-      from: 'AtomPair'
-      message: "Hello there #{mentionName}. Somebody really really wants to pair with you. If you haven't installed the AtomPair plugin, type \`apm install AtomPair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
-      message_format: 'text'
+    room_id = null
 
-    hc_client.postMessage params, (data) =>
-      alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
-      atom.workspace.addModalPanel(item: alertView, visible: true)
-      @startPairing()
+    hc_client.listRooms (data) =>
+      room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
+
+      params =
+        room: room_id
+        from: 'AtomPair'
+        message: "Hello there #{mentionName}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install AtomPair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
+        message_format: 'text'
+
+      hc_client.postMessage params, (data) =>
+        alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
+        atom.workspace.addModalPanel(item: alertView, visible: true)
+        @startPairing()
 
 
   startPairing: ->
