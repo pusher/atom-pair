@@ -4,7 +4,7 @@ We are starting to really love Atom at Pusher. Its customizability is hugely ben
 
 You see, we're fairly big on pair programming, but many of us work remotely. Of course, there are many existing solutions to this: screen sharing, browser pairing, not pairing at all.
 
-But none of those quite suited our needs. We wanted something immediate, almost frictionless, something that dissolves the distance between collaborators. Atom, built on hackability, seemed like the perfect medium: to pair together *within* a text editor sounded ideal. We had tried Firebase's Atom FirePad, which is very cool and super easy to use, but was perhaps lacking in some areas that we needed for our daily work. 
+But none of those quite suited our needs. We wanted something immediate, almost frictionless, something that dissolves the distance between collaborators. Atom, built on hackability, seemed like the perfect medium: to pair together *within* a text editor sounded ideal. We had tried [Firebase's Atom FirePad](https://github.com/firebase/atom-firepad), which is very cool and super easy to use, but was perhaps lacking in some areas that we needed for our daily work. 
 
 Therefore, we decided to build **AtomPair**, and now we want to share the ♥.
 
@@ -31,7 +31,7 @@ You will be given a session ID, hit `command+c` and paste that to a friend.
 
 ####HipChat
 
-The other way, one that we use quite often, is to invite collaborators over HipChat. If you are an admin of a HipChat organization, type `command+shift+p` and go to `AtomPair: Set configuration keys`. Enter your HipChat API key and hit enter. 
+The other way, one that we use quite often, is to invite collaborators over HipChat. If you are an admin of a HipChat organization, type `command+shift+p` and go to `AtomPair: Set configuration keys`. Enter your HipChat API key and the room you wish the invitation to be sent through. 
 
 Now, when you enter `AtomPair: Invite Over HipChat` and enter your collaborator's HipChat @mention_name in the command pallette, they will receive an invitation with a session ID.
 
