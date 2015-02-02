@@ -6,7 +6,7 @@ However, there was always one thing we wanted to do with it...
 
 You see, we're fairly big on pair programming, but many of us work remotely. Of course, there are many existing solutions to this: screen sharing, browser pairing, or not pairing at all.
 
-But none of those quite suited our needs. We wanted something immediate, almost frictionless, something that dissolves the distance between collaborators. Atom, built on hackability, seemed like the perfect medium: to pair together *within* a text editor sounded ideal. We had tried [Firebase's Atom FirePad](https://github.com/firebase/atom-firepad), which is very cool and super easy to use, but was perhaps lacking in some areas that we needed for our daily work. 
+But none of those quite suited our needs. We wanted something immediate, almost frictionless, something that dissolves the distance between collaborators. Atom, built on hackability, seemed like the perfect medium: to pair together *within* a text editor sounded ideal.
 
 Therefore, we decided to build **AtomPair**, and now we want to share the ♥.
 
