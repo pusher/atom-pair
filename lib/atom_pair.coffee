@@ -165,7 +165,7 @@ module.exports = AtomPair =
       params =
         room: room_id
         from: 'AtomPair'
-        message: "Hello there #{mentionName}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install AtomPair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
+        message: "Hello there #{mentionName}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
         message_format: 'text'
 
       hc_client.postMessage params, (data) =>

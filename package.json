@@ -1,5 +1,5 @@
 {
-  "name": "AtomPair",
+  "name": "atom-pair",
   "main": "./lib/atom_pair",
   "version": "0.18.0",
   "description": "An Atom Package that allows for epic pair programming, powered by Pusher",
@@ -11,7 +11,7 @@
       "AtomPair:invite over hipchat"
     ]
   },
-  "repository": "https://github.com/pusher/AtomPair",
+  "repository": "https://github.com/pusher/atom-pair",
   "license": "MIT",
   "engines": {
     "atom": ">0.50.0"
