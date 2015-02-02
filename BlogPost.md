@@ -32,6 +32,8 @@ Hit `command+shift+p`, and in the command palette, hit `AtomPair: Start A New Pa
 
 You will be given a session ID, hit `command+c` and paste that to a friend.
 
+![Basic Invite](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/invite.gif)
+
 ####HipChat
 
 The other way, one that we use quite often, is to invite collaborators over HipChat. We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
