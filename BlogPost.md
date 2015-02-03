@@ -1,6 +1,6 @@
 #Introducing AtomPair, The Ultimate Pair Programming Experience for Atom.IO
 
-We are starting to really love [Atom](http://atom.io) at Pusher. Its customizability is hugely beneficial to our workflow, and its API is awesome and very well documented indeed. There is a big community building around it, and the product seems to get better with every release. 
+We really love [Atom](http://atom.io) at Pusher. Its customizability is hugely beneficial to our workflow, and its API is awesome and very well documented indeed. There is a big community building around it, and the product seems to get better with every release. 
 
 However, there was always one thing we wanted to do with it...
 
@@ -26,7 +26,7 @@ You can either decide to pair on a blank slate, or on existing code. If you invi
 
 As detailed below, there are two ways you can invite others. Given a free Sandbox plan, there will be a maximum of 20 collaborators per session.
 
-####Basic
+####Basic Invitation
 
 Hit `command+shift+p`, and in the command palette, hit `AtomPair: Start A New Pairing Session`. 
 
@@ -34,9 +34,11 @@ You will be given a session ID, hit `command+c` and paste that to a friend.
 
 ![Basic Invite](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/invite.gif)
 
-####HipChat
+####HipChat Invitation
 
-The other way - one that we use quite often - is to invite collaborators over HipChat. We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
+The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up).
+
+We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
 
 If you have admin privileges in a HipChat organization, type `command+shift+p` and go to `AtomPair: Set configuration keys`. Enter your HipChat API key and the room you wish the invitation to be sent through. 
 
