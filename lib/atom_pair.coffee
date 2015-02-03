@@ -26,6 +26,8 @@ module.exports = AtomPair =
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
 
+    @editorListeners = new CompositeDisposable
+
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
@@ -45,7 +47,11 @@ module.exports = AtomPair =
 
   disconnect: ->
     @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
-    setTimeout((=> @pusher.disconnect()),500)
+    setTimeout((=>
+      @pusher.disconnect()
+      @editorListeners.dispose()
+      )
+    ,500)
     _.each @friendColours, (colour) => @clearMarkers(colour)
     atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
@@ -232,17 +238,19 @@ module.exports = AtomPair =
       atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
     @triggerEventQueue()
-    @listenToBufferChanges()
-    @syncSelectionRange()
+
+    @editorListeners.add @listenToBufferChanges()
+    @editorListeners.add @syncSelectionRange()
 
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      @events.push({deletion: deletion, event: event, colour: @markerColour})
+      event = {deletion: deletion, event: event, colour: @markerColour}
+      @events.push(event)
 
   triggerEventQueue: ->
-    setInterval(=>
+    @eventInterval = setInterval(=>
       if @events.length > 0
         @pairingChannel.trigger 'client-change', @events
         @events = []
@@ -278,7 +286,7 @@ module.exports = AtomPair =
       @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
 
   syncGrammars: ->
-    @editor.on 'grammar-changed', => @sendGrammar()
+    return @editor.on 'grammar-changed', => @sendGrammar()
 
   sendGrammar: ->
     grammar = @editor.getGrammar()
@@ -298,7 +306,6 @@ module.exports = AtomPair =
     else
       _.each @timeouts, (timeout) -> clearTimeout(timeout)
       element.addClass(colour)
-
 
   shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
