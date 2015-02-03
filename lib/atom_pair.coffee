@@ -25,7 +25,6 @@ module.exports = AtomPair =
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
-
     @editorListeners = new CompositeDisposable
 
     # Register command that toggles this view
@@ -153,12 +152,17 @@ module.exports = AtomPair =
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
       invitePanel = atom.workspace.addModalPanel(item: inviteView, visible: true)
       inviteView.on 'core:confirm', =>
-        mentionName = inviteView.miniEditor.getText()
-        @sendHipChatMessageTo(mentionName)
+        mentionNames = inviteView.miniEditor.getText()
+        @sendHipChatMessageTo(mentionNames)
         invitePanel.hide()
 
-  sendHipChatMessageTo: (mentionName) ->
-    if mentionName[0] isnt "@" then mentionName = ("@" + mentionName)
+  sendHipChatMessageTo: (mentionNames) ->
+
+    collaboratorsArray = mentionNames.match(/\w+/g)
+    collaboratorsString = _.map(collaboratorsArray, (collaborator) ->
+      "@" + collaborator unless collaborator[0] is "@"
+    ).join(", ")
+
     hc_client = new HipChat(@hc_key)
 
     @generateSessionId()
@@ -171,11 +175,12 @@ module.exports = AtomPair =
       params =
         room: room_id
         from: 'AtomPair'
-        message: "Hello there #{mentionName}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
+        message: "Hello there #{collaboratorsString}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
         message_format: 'text'
 
       hc_client.postMessage params, (data) =>
-        alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
+        if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
+        alertView = new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
         atom.workspace.addModalPanel(item: alertView, visible: true)
         @startPairing()
 
