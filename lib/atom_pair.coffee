@@ -25,7 +25,6 @@ module.exports = AtomPair =
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
-
     @editorListeners = new CompositeDisposable
 
     # Register command that toggles this view
@@ -153,12 +152,17 @@ module.exports = AtomPair =
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
       invitePanel = atom.workspace.addModalPanel(item: inviteView, visible: true)
       inviteView.on 'core:confirm', =>
-        mentionName = inviteView.miniEditor.getText()
-        @sendHipChatMessageTo(mentionName)
+        mentionNames = inviteView.miniEditor.getText()
+        @sendHipChatMessageTo(mentionNames)
         invitePanel.hide()
 
-  sendHipChatMessageTo: (mentionName) ->
-    if mentionName[0] isnt "@" then mentionName = ("@" + mentionName)
+  sendHipChatMessageTo: (mentionNames) ->
+
+    collaboratorsArray = mentionNames.match(/\w+/g)
+    collaboratorsString = _.map(collaboratorsArray, (collaborator) ->
+      "@" + collaborator unless collaborator[0] is "@"
+    ).join(", ")
+
     hc_client = new HipChat(@hc_key)
 
     @generateSessionId()
@@ -171,11 +175,12 @@ module.exports = AtomPair =
       params =
         room: room_id
         from: 'AtomPair'
-        message: "Hello there #{mentionName}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
+        message: "Hello there #{collaboratorsString}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
         message_format: 'text'
 
       hc_client.postMessage params, (data) =>
-        alertView = new AlertView "#{mentionName} has been sent an invitation. Hold tight!"
+        if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
+        alertView = new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
         atom.workspace.addModalPanel(item: alertView, visible: true)
         @startPairing()
 
@@ -211,10 +216,6 @@ module.exports = AtomPair =
 
     @pairingChannel.bind 'client-broadcast-initial-marker', (data) => @receiveFriendInfo(data)
 
-    @pairingChannel.bind 'client-text-select', (data) =>
-      @clearMarkers(data.colour)
-      @markRows(data.rows, data.colour)
-
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
       @editor.setGrammar(grammar)
@@ -230,7 +231,13 @@ module.exports = AtomPair =
       buffer.append(chunk)
       @triggerPush = true
 
-    @pairingChannel.bind 'client-change', (events) => _.each(events, (event) => @changeBuffer(event) )
+    @pairingChannel.bind 'client-change', (events) =>
+      _.each(events, (event) =>
+        @changeBuffer(event) if event.eventType is 'buffer-change'
+        if event.eventType is 'buffer-selection'
+          console.log 'hello'
+          @updateCollaboratorMarker(event)
+      )
 
     @pairingChannel.bind 'client-disconnected', (data) =>
       @clearMarkers(data.colour)
@@ -242,19 +249,16 @@ module.exports = AtomPair =
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
 
+  updateCollaboratorMarker: (data) ->
+    @clearMarkers(data.colour)
+    @markRows(data.rows, data.colour)
+
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      event = {deletion: deletion, event: event, colour: @markerColour}
+      event = {deletion: deletion, event: event, colour: @markerColour, eventType: 'buffer-change'}
       @events.push(event)
-
-  triggerEventQueue: ->
-    @eventInterval = setInterval(=>
-      if @events.length > 0
-        @pairingChannel.trigger 'client-change', @events
-        @events = []
-    , 180)
 
   changeBuffer: (data) ->
     newRange = Range.fromObject(data.event.newRange)
@@ -283,7 +287,14 @@ module.exports = AtomPair =
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
+      @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
+
+  triggerEventQueue: ->
+    @eventInterval = setInterval(=>
+      if @events.length > 0
+        @pairingChannel.trigger 'client-change', @events
+        @events = []
+    , 120)
 
   syncGrammars: ->
     return @editor.on 'grammar-changed', => @sendGrammar()
@@ -316,6 +327,5 @@ module.exports = AtomPair =
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
       chunks = chunkString(currentFile, 950)
-      chunksPerSecond = chunks.length / 10
-      _.each chunks, (chunk) =>
-        setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond)
+      _.each chunks, (chunk, index) =>
+        setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), 180 * index)
