@@ -89,7 +89,8 @@ module.exports = AtomPair =
       @assignColour(takenColour)
 
       @joinPanel.hide()
-      @startPairing()
+
+      atom.workspace.open().then => @startPairing()
 
   assignColour: (takenColour) ->
     colour = _.sample(@colours)
@@ -235,7 +236,6 @@ module.exports = AtomPair =
       _.each(events, (event) =>
         @changeBuffer(event) if event.eventType is 'buffer-change'
         if event.eventType is 'buffer-selection'
-          console.log 'hello'
           @updateCollaboratorMarker(event)
       )
 
