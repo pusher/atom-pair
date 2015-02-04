@@ -216,10 +216,6 @@ module.exports = AtomPair =
 
     @pairingChannel.bind 'client-broadcast-initial-marker', (data) => @receiveFriendInfo(data)
 
-    @pairingChannel.bind 'client-text-select', (data) =>
-      @clearMarkers(data.colour)
-      @markRows(data.rows, data.colour)
-
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
       @editor.setGrammar(grammar)
@@ -235,7 +231,13 @@ module.exports = AtomPair =
       buffer.append(chunk)
       @triggerPush = true
 
-    @pairingChannel.bind 'client-change', (events) => _.each(events, (event) => @changeBuffer(event) )
+    @pairingChannel.bind 'client-change', (events) =>
+      _.each(events, (event) =>
+        @changeBuffer(event) if event.eventType is 'buffer-change'
+        if event.eventType is 'buffer-selection'
+          console.log 'hello'
+          @updateCollaboratorMarker(event)
+      )
 
     @pairingChannel.bind 'client-disconnected', (data) =>
       @clearMarkers(data.colour)
@@ -247,19 +249,16 @@ module.exports = AtomPair =
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
 
+  updateCollaboratorMarker: (data) ->
+    @clearMarkers(data.colour)
+    @markRows(data.rows, data.colour)
+
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
       deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      event = {deletion: deletion, event: event, colour: @markerColour}
+      event = {deletion: deletion, event: event, colour: @markerColour, eventType: 'buffer-change'}
       @events.push(event)
-
-  triggerEventQueue: ->
-    @eventInterval = setInterval(=>
-      if @events.length > 0
-        @pairingChannel.trigger 'client-change', @events
-        @events = []
-    , 180)
 
   changeBuffer: (data) ->
     newRange = Range.fromObject(data.event.newRange)
@@ -288,7 +287,14 @@ module.exports = AtomPair =
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @pairingChannel.trigger 'client-text-select', {colour: @markerColour, rows: rows}
+      @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
+
+  triggerEventQueue: ->
+    @eventInterval = setInterval(=>
+      if @events.length > 0
+        @pairingChannel.trigger 'client-change', @events
+        @events = []
+    , 120)
 
   syncGrammars: ->
     return @editor.on 'grammar-changed', => @sendGrammar()
