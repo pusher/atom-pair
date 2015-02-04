@@ -16,7 +16,7 @@ Alternatively, go to the command palette via `command+shift+p` and go to `Instal
 
 You can either decide to pair on a blank slate, or on existing code. If you invite somebody to collaborate on existing code, they will see everything you can, and their syntax highlighting will be synchronized with yours.
 
-As detailed below, there are two ways you can invite others. Given a free Sandbox plan, there will be a maximum of 20 collaborators per session.
+As detailed below, there are two ways you can invite others. Given a [free](http://pusher.com/signup) Sandbox plan, there will be a maximum of 20 collaborators per session.
 
 ####Basic Invitation
 
@@ -50,7 +50,7 @@ To end a pairing session, go to `AtomPair: Disconnect`, and you will be disconne
 
 ##Free And Open For Everyone
 
-Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account]() and enter your own app key and app secret by going to `AtomPair: Set configuration keys` in the command palette. A free Sandbox plan should be more than enough for your pairing sessions.
+Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account](http://pusher.com/signup) and enter your own app key and app secret by going to `AtomPair: Set configuration keys` in the command palette. A free Sandbox plan should be more than enough for your pairing sessions.
 
 ###Contributing
 
