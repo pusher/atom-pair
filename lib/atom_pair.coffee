@@ -321,6 +321,5 @@ module.exports = AtomPair =
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
       chunks = chunkString(currentFile, 950)
-      chunksPerSecond = chunks.length / 10
-      _.each chunks, (chunk) =>
-        setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), chunksPerSecond)
+      _.each chunks, (chunk, index) =>
+        setTimeout(( => @pairingChannel.trigger 'client-share-partial-file', chunk), 180 * index)
