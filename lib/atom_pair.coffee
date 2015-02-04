@@ -249,6 +249,13 @@ module.exports = AtomPair =
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
 
+    @listenForDestruction()
+
+  listenForDestruction: ->
+    @editorListeners.add @buffer.onDidDestroy => @disconnect()
+    @editorListeners.add @editor.onDidDestroy => @disconnect()
+
+
   updateCollaboratorMarker: (data) ->
     @clearMarkers(data.colour)
     @markRows(data.rows, data.colour)
