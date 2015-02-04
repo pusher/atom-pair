@@ -271,15 +271,12 @@ module.exports = AtomPair =
 
     if data.deletion
       @buffer.delete oldRange
-      @editor.scrollToBufferPosition(oldRange.start)
       @addMarker oldRange.start.toArray()[0], data.colour
     else if oldRange.containsRange(newRange)
       @buffer.setTextInRange oldRange, newText
-      @editor.scrollToBufferPosition(oldRange.start)
       @addMarker oldRange.start.toArray()[0], data.colour
     else
       @buffer.insert newRange.start, newText
-      @editor.scrollToBufferPosition(newRange.start)
       @addMarker(newRange.end.toArray()[0], data.colour)
 
     @triggerPush = true
