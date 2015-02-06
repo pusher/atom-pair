@@ -94,7 +94,7 @@ module.exports = AtomPair =
 
   assignColour: (takenColour) ->
     colour = _.sample(@colours)
-    if colour is takenColour then assignColour()
+    if colour is takenColour then @assignColour()
 
     data = {colour: takenColour}
     @receiveFriendInfo(data)
