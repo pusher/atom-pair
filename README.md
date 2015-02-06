@@ -63,7 +63,7 @@ Here is a current list of features:
 * Synchronized syntax highlighting
 * Collaborator visibility.
 
-But if there are any features you find lacking, feel more than welcome to [get in touch](jamie@pusher.com).
+But if there are any features you find lacking, feel more than welcome to [get in touch](<mailto:jamie@pusher.com>).
 
 Happy pairing!
 
