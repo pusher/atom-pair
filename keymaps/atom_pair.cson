@@ -12,5 +12,6 @@
   'escape': 'AtomPair:hide views'
 'div.session-id':
   'cmd-c': 'AtomPair:copyid'
+  'ctrl-c': 'AtomPair:copyid'
 'atom-panel-container.bottom':
   'escape': 'core:cancel'
