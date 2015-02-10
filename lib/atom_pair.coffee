@@ -8,10 +8,12 @@ require './pusher/pusher-js-client-auth'
 
 randomstring = require 'randomstring'
 _ = require 'underscore'
-$ = require 'jquery'
 chunkString = require './helpers/chunk-string'
 
-HipChat = require 'node-hipchat'
+HipChatInvite = require './modules/hipchat_invite'
+Marker = require './modules/marker'
+GrammarSync = require './modules/grammar_sync'
+AtomPairConfig = require './modules/atom_pair_config'
 
 {CompositeDisposable} = require 'atom'
 {Range} = require 'atom'
@@ -40,9 +42,7 @@ module.exports = AtomPair =
     @friendColours = []
     @timeouts = []
     @events = []
-
-  deactivate: ->
-    @subscriptions.dispose()
+    _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig)
 
   disconnect: ->
     @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
@@ -55,25 +55,11 @@ module.exports = AtomPair =
     atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
 
-  serialize: ->
-    AtomPairViewState: @AtomPairView.serialize()
-
   copyId: ->
     atom.clipboard.write(@sessionId)
 
   hidePanel: ->
     _.each atom.workspace.getModalPanels(), (panel) -> panel.hide()
-
-  setConfig: ->
-    @getKeysFromConfig()
-    @configView = new ConfigView(@app_key, @app_secret, @hc_key, @room_name)
-    @configPanel = atom.workspace.addModalPanel(item: @configView, visible: true)
-
-    @configView.on 'core:confirm', =>
-      _.each ['pusher_app_key', 'pusher_app_secret', 'hipchat_token', 'hipchat_room_name'], (key) =>
-        value = @configView[key].getText()
-        atom.config.set(key, value) unless value.length is 0
-      @configPanel.hide()
 
   joinSession: ->
     @joinView = new InputView("Enter the session ID here:")
@@ -92,36 +78,6 @@ module.exports = AtomPair =
 
       atom.workspace.open().then => @startPairing()
 
-  assignColour: (takenColour) ->
-    colour = _.sample(@colours)
-    if colour is takenColour then @assignColour()
-
-    data = {colour: takenColour}
-    @receiveFriendInfo(data)
-    @markerColour = colour
-
-  receiveFriendInfo: (data) ->
-    friendInfo = {colour: data.colour}
-    unless _.contains(@friendColours, friendInfo.colour)
-      @friendColours.push(data.colour)
-    unless friendInfo.markerSeen
-      @addMarker 0, data.colour
-      friendInfo.markerSeen = true
-
-  getKeysFromConfig: ->
-    @app_key = atom.config.get('pusher_app_key') || 'd41a439c438a100756f5'
-    @app_secret = atom.config.get('pusher_app_secret') || '4bf35003e819bb138249'
-    @hc_key = atom.config.get 'hipchat_token'
-    @room_name = atom.config.get 'hipchat_room_name'
-
-  missingPusherKeys: ->
-    _.any([@app_key, @app_secret], (key) ->
-      typeof(key) is "undefined")
-
-  missingHipChatKeys: ->
-    _.any([@hc_key, @room_name], (key) ->
-      typeof(key) is "undefined")
-
   startSession: ->
     @getKeysFromConfig()
 
@@ -139,52 +95,6 @@ module.exports = AtomPair =
     colourIndex = _.random(0, @colours.length)
     @markerColour = @colours[colourIndex]
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
-
-  inviteOverHipChat: ->
-    @getKeysFromConfig()
-
-    if @missingPusherKeys()
-      alertView = new AlertView "Please set your Pusher keys."
-      atom.workspace.addModalPanel(item: alertView, visible: true)
-    else if @missingHipChatKeys()
-      alertView = new AlertView "Please set your HipChat keys."
-      atom.workspace.addModalPanel(item: alertView, visible: true)
-    else
-      inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
-      invitePanel = atom.workspace.addModalPanel(item: inviteView, visible: true)
-      inviteView.on 'core:confirm', =>
-        mentionNames = inviteView.miniEditor.getText()
-        @sendHipChatMessageTo(mentionNames)
-        invitePanel.hide()
-
-  sendHipChatMessageTo: (mentionNames) ->
-
-    collaboratorsArray = mentionNames.match(/\w+/g)
-    collaboratorsString = _.map(collaboratorsArray, (collaborator) ->
-      "@" + collaborator unless collaborator[0] is "@"
-    ).join(", ")
-
-    hc_client = new HipChat(@hc_key)
-
-    @generateSessionId()
-
-    room_id = null
-
-    hc_client.listRooms (data) =>
-      room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
-
-      params =
-        room: room_id
-        from: 'AtomPair'
-        message: "Hello there #{collaboratorsString}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@sessionId}"
-        message_format: 'text'
-
-      hc_client.postMessage params, (data) =>
-        if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
-        alertView = new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
-        atom.workspace.addModalPanel(item: alertView, visible: true)
-        @startPairing()
-
 
   startPairing: ->
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
@@ -255,7 +165,6 @@ module.exports = AtomPair =
     @editorListeners.add @buffer.onDidDestroy => @disconnect()
     @editorListeners.add @editor.onDidDestroy => @disconnect()
 
-
   updateCollaboratorMarker: (data) ->
     @clearMarkers(data.colour)
     @markRows(data.rows, data.colour)
@@ -302,28 +211,6 @@ module.exports = AtomPair =
         @pairingChannel.trigger 'client-change', @events
         @events = []
     , 120)
-
-  syncGrammars: ->
-    return @editor.on 'grammar-changed', => @sendGrammar()
-
-  sendGrammar: ->
-    grammar = @editor.getGrammar()
-    @pairingChannel.trigger 'client-grammar-sync', grammar.scopeName
-
-  markRows: (rows, colour) ->
-    _.each rows, (row) => @addMarker(row, colour)
-
-  clearMarkers: (colour) ->
-    $("atom-text-editor#AtomPair::shadow .line-number").each (index, line) =>
-      $(line).removeClass(colour)
-
-  addMarker: (line, colour) ->
-    element = $("atom-text-editor#AtomPair::shadow .line-number-#{line}")
-    if element.length is 0
-      @timeouts.push(setTimeout((=> @addMarker(line,colour)), 50))
-    else
-      _.each @timeouts, (timeout) -> clearTimeout(timeout)
-      element.addClass(colour)
 
   shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
