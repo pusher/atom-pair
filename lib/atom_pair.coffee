@@ -48,10 +48,10 @@ module.exports = AtomPair =
     @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
     setTimeout((=>
       @pusher.disconnect()
-      @editorListeners.dispose()
+      @editorListeners.dispose() #remove editor event listeners
       )
     ,500)
-    _.each @friendColours, (colour) => @clearMarkers(colour)
+    _.each @friendColours, (colour) => @clearMarkers(colour) #get rid of colours
     atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
 
@@ -76,7 +76,7 @@ module.exports = AtomPair =
 
       @joinPanel.hide()
 
-      atom.workspace.open().then => @startPairing()
+      atom.workspace.open().then => @startPairing() #starts a new tab to join pairing session
 
   startSession: ->
     @getKeysFromConfig()
@@ -104,6 +104,7 @@ module.exports = AtomPair =
 
     buffer = @buffer = @editor.buffer
 
+    # client auth
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
@@ -182,16 +183,16 @@ module.exports = AtomPair =
 
     if data.deletion
       @buffer.delete oldRange
-      @editor.scrollToBufferPosition(oldRange.start)
-      @addMarker oldRange.start.toArray()[0], data.colour
+      actionArea = oldRange.start
     else if oldRange.containsRange(newRange)
       @buffer.setTextInRange oldRange, newText
-      @editor.scrollToBufferPosition(oldRange.start)
-      @addMarker oldRange.start.toArray()[0], data.colour
+      actionArea = oldRange.start
     else
       @buffer.insert newRange.start, newText
-      @editor.scrollToBufferPosition(newRange.start)
-      @addMarker(newRange.end.toArray()[0], data.colour)
+      actionArea = newRange.start
+
+    @editor.scrollToBufferPosition(actionArea)
+    @addMarker(actionArea.toArray()[0], data.colour)
 
     @triggerPush = true
 
@@ -211,9 +212,8 @@ module.exports = AtomPair =
   shareCurrentFile: (buffer) ->
     currentFile = buffer.getText()
     return if currentFile.length is 0
-    size = Buffer.byteLength(currentFile, 'utf8')
 
-    if size < 1000
+    if currentFile.length < 950
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
       chunks = chunkString(currentFile, 950)
