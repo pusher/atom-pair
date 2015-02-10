@@ -33,3 +33,7 @@ module.exports = Marker =
     else
       _.each @timeouts, (timeout) -> clearTimeout(timeout)
       element.addClass(colour)
+      
+  updateCollaboratorMarker: (data) ->
+    @clearMarkers(data.colour)
+    @markRows(data.rows, data.colour)
