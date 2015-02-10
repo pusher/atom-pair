@@ -45,13 +45,12 @@ module.exports = AtomPair =
     _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig)
 
   disconnect: ->
-    @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
     setTimeout((=>
       @pusher.disconnect()
       @editorListeners.dispose() #remove editor event listeners
       )
-    ,500)
-    _.each @friendColours, (colour) => @clearMarkers(colour) #get rid of colours
+    , 500)
+    # _.each @friendColours, (colour) => @clearMarkers(colour) #get rid of colours
     atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
 
@@ -70,10 +69,6 @@ module.exports = AtomPair =
       @sessionId = @joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
-
-      # takenColour = @colours[keys[3]]
-      # @assignColour(takenColour)
-
       @joinPanel.hide()
 
       atom.workspace.open().then => @startPairing() #starts a new tab to join pairing session
@@ -99,7 +94,7 @@ module.exports = AtomPair =
     @pairingChannel.unsubscribe()
     @markerColour = @colours[@membersCount]
     @subscribeToPusher()
-    @listenForEvents()
+    @synchronizeColours()
 
   subscribeToPusher: ->
     @pusher = new Pusher @app_key,
@@ -147,8 +142,8 @@ module.exports = AtomPair =
           @updateCollaboratorMarker(event)
       )
 
-    @pairingChannel.bind 'client-disconnected', (data) =>
-      @clearMarkers(data.colour)
+    @pairingChannel.bind 'pusher:member_removed', (member) =>
+      @clearMarkers(member.id)
       disconnectView = new AlertView "Your pair buddy has left the session."
       atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
@@ -165,10 +160,16 @@ module.exports = AtomPair =
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     @subscribeToPusher()
+    @synchronizeColours()
 
+
+  synchronizeColours: ->
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
       @membersCount = members.count
       return @resubscribe() unless @markerColour
+      colours = Object.keys(members.members)
+      friendColours = _.without(colours, @markerColour)
+      _.each(friendColours, (colour) => @addMarker 0, colour)
       @listenForEvents()
 
   listenForDestruction: ->
