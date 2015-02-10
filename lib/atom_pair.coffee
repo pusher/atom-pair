@@ -165,10 +165,6 @@ module.exports = AtomPair =
     @editorListeners.add @buffer.onDidDestroy => @disconnect()
     @editorListeners.add @editor.onDidDestroy => @disconnect()
 
-  updateCollaboratorMarker: (data) ->
-    @clearMarkers(data.colour)
-    @markRows(data.rows, data.colour)
-
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
