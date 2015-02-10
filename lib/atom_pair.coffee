@@ -71,8 +71,8 @@ module.exports = AtomPair =
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
 
-      takenColour = @colours[keys[3]]
-      @assignColour(takenColour)
+      # takenColour = @colours[keys[3]]
+      # @assignColour(takenColour)
 
       @joinPanel.hide()
 
@@ -92,41 +92,38 @@ module.exports = AtomPair =
       @startPairing()
 
   generateSessionId: ->
-    colourIndex = _.random(0, @colours.length)
-    @markerColour = @colours[colourIndex]
-    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
+    @markerColour = @colours[0]
+    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
-  startPairing: ->
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
-    @triggerPush = true
-    @editor = atom.workspace.getActiveEditor()
-    atom.views.getView(@editor).setAttribute('id', 'AtomPair')
+  resubscribe: ->
+    @pairingChannel.unsubscribe()
+    @markerColour = @colours[@membersCount]
+    @subscribeToPusher()
+    @listenForEvents()
 
-    buffer = @buffer = @editor.buffer
-
-    # client auth
+  subscribeToPusher: ->
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
-        user_id: "user"
+        user_id: @markerColour || "blank"
 
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
-    @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-      @pairingChannel.trigger 'client-joined', {colour: @markerColour}
+  listenForEvents: ->
 
-    @pairingChannel.bind 'client-joined', (data) =>
+    @triggerPush = true
+    buffer = @buffer = @editor.buffer
+
+    @pairingChannel.bind 'pusher:member_added', (member) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
       atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
       @syncGrammars()
       @shareCurrentFile(buffer)
-      @receiveFriendInfo(data)
+      @addMarker 0, member.id
       @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
-
-    @pairingChannel.bind 'client-broadcast-initial-marker', (data) => @receiveFriendInfo(data)
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
@@ -161,6 +158,18 @@ module.exports = AtomPair =
     @editorListeners.add @syncSelectionRange()
 
     @listenForDestruction()
+
+  startPairing: ->
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
+    @editor = atom.workspace.getActiveEditor()
+    atom.views.getView(@editor).setAttribute('id', 'AtomPair')
+
+    @subscribeToPusher()
+
+    @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
+      @membersCount = members.count
+      return @resubscribe() unless @markerColour
+      @listenForEvents()
 
   listenForDestruction: ->
     @editorListeners.add @buffer.onDidDestroy => @disconnect()
