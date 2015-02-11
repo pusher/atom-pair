@@ -130,16 +130,13 @@ module.exports = AtomPair =
       noticeView = new AlertView "Your pair buddy has joined the session."
       atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
-      @syncGrammars()
       @shareCurrentFile(buffer)
       @friendColours.push(member.id)
       @addMarker 0, member.id
-      @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
       @editor.setGrammar(grammar)
-      @syncGrammars()
 
     @pairingChannel.bind 'client-share-whole-file', (file) =>
       @triggerPush = false
@@ -167,6 +164,8 @@ module.exports = AtomPair =
     # listening for buffer events
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
+    @editorListeners.add @syncGrammars()
+
 
     # listening for its own demise
     @listenForDestruction()
@@ -218,8 +217,8 @@ module.exports = AtomPair =
         @events = []
     , 120)
 
-  shareCurrentFile: (buffer) ->
-    currentFile = buffer.getText()
+  shareCurrentFile: ->
+    currentFile = @buffer.getText()
     return if currentFile.length is 0
 
     if currentFile.length < 950

@@ -1,6 +1,6 @@
 module.exports = GrammarSync =
   syncGrammars: ->
-    return @editor.on 'grammar-changed', => @sendGrammar()
+    @editor.on 'grammar-changed', => @sendGrammar()
 
   sendGrammar: ->
     grammar = @editor.getGrammar()
