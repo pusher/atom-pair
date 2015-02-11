@@ -15,16 +15,28 @@ Marker = require './modules/marker'
 GrammarSync = require './modules/grammar_sync'
 AtomPairConfig = require './modules/atom_pair_config'
 
-{CompositeDisposable} = require 'atom'
-{Range} = require 'atom'
+{CompositeDisposable, Range} = require 'atom'
 
 module.exports = AtomPair =
   AtomPairView: null
   modalPanel: null
   subscriptions: null
 
-  activate: (state) ->
+  config:
+    pusher_app_key:
+      type: 'string'
+      default: 'd41a439c438a100756f5'
+    pusher_app_secret:
+      type: 'string'
+      default: '4bf35003e819bb138249'
+    hipchat_token:
+      type: 'string'
+      default: ''
+    hipchat_room_name:
+      type: 'string'
+      default: ''
 
+  activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
     @editorListeners = new CompositeDisposable

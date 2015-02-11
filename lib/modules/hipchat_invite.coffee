@@ -34,7 +34,13 @@ module.exports = HipChatInvite =
     @generateSessionId()
 
     hc_client.listRooms (data) =>
-      room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
+
+      try
+        room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
+      catch error
+        keyErrorView = new AlertView "Something went wrong. Please check your HipChat keys."
+        atom.workspace.addModalPanel(item: keyErrorView, visible: true)
+        return
 
       params =
         room: room_id
