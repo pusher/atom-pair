@@ -3,14 +3,6 @@ _ = require 'underscore'
 
 module.exports = Marker =
 
-  assignColour: (takenColour) ->
-    colour = _.sample(@colours)
-    if colour is takenColour then @assignColour()
-
-    data = {colour: takenColour}
-    @receiveFriendInfo(data)
-    @markerColour = colour
-
   markRows: (rows, colour) ->
     _.each rows, (row) => @addMarker(row, colour)
 
