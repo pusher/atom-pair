@@ -104,11 +104,12 @@ module.exports = AtomPair =
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
   pairingSetup: ->
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
     @editor = atom.workspace.getActiveEditor()
+    if !@editor then return atom.workspace.open().then => @pairingSetup()
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
     @connectToPusher()
     @synchronizeColours()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
 
   connectToPusher: ->
     @pusher = new Pusher @app_key,
