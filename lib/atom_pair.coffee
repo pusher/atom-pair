@@ -208,27 +208,39 @@ module.exports = AtomPair =
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
-      deletion = !(event.newText is "\n") and (event.newText.length is 0)
-      event = {deletion: deletion, event: event, colour: @markerColour, eventType: 'buffer-change'}
+
+      if !(event.newText is "\n") and (event.newText.length is 0)
+        changeType = 'deletion'
+        event = {oldRange: event.oldRange}
+      else if event.oldRange.containsRange(event.newRange)
+        changeType = 'substitution'
+        event = {oldRange: event.oldRange, newRange: event.newRange, newText: event.newText}
+      else
+        changeType = 'insertion'
+        event  = {newRange: event.newRange, newText: event.newText}
+
+      event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
       @events.push(event)
 
   changeBuffer: (data) ->
-    newRange = Range.fromObject(data.event.newRange)
-    oldRange = Range.fromObject(data.event.oldRange)
-    newText = data.event.newText
+    if data.event.newRange then newRange = Range.fromObject(data.event.newRange)
+    if data.event.oldRange then oldRange = Range.fromObject(data.event.oldRange)
+    if data.event.newText then newText = data.event.newText
+
     @triggerPush = false
 
     @clearMarkers(data.colour)
 
-    if data.deletion
-      @buffer.delete oldRange
-      actionArea = oldRange.start
-    else if oldRange.containsRange(newRange)
-      @buffer.setTextInRange oldRange, newText
-      actionArea = oldRange.start
-    else
-      @buffer.insert newRange.start, newText
-      actionArea = newRange.start
+    switch data.changeType
+      when 'deletion'
+        @buffer.delete oldRange
+        actionArea = oldRange.start
+      when 'substitution'
+        @buffer.setTextInRange oldRange, newText
+        actionArea = oldRange.start
+      else
+        @buffer.insert newRange.start, newText
+        actionArea = newRange.start
 
     @editor.scrollToBufferPosition(actionArea)
     @addMarker(actionArea.toArray()[0], data.colour)
