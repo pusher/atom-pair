@@ -61,12 +61,8 @@ module.exports = AtomPair =
     _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig)
 
   disconnect: ->
-    @pairingChannel.trigger 'client-disconnected', {colour: @markerColour}
-    setTimeout((=>
-      @pusher.disconnect()
-      @editorListeners.dispose()
-      )
-    ,500)
+    @pusher.disconnect()
+    @editorListeners.dispose()
     _.each @friendColours, (colour) => @clearMarkers(colour)
     atom.views.getView(@editor).removeAttribute('id')
     @hidePanel()
@@ -86,13 +82,9 @@ module.exports = AtomPair =
       @sessionId = @joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
-
-      takenColour = @colours[keys[3]]
-      @assignColour(takenColour)
-
       @joinPanel.hide()
 
-      atom.workspace.open().then => @startPairing()
+      atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
 
   startSession: ->
     @getKeysFromConfig()
@@ -105,48 +97,62 @@ module.exports = AtomPair =
       @startView = new StartView(@sessionId)
       @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
       @startView.focus()
-      @startPairing()
+      @markerColour = @colours[0]
+      @pairingSetup()
 
   generateSessionId: ->
-    colourIndex = _.random(0, @colours.length)
-    @markerColour = @colours[colourIndex]
-    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}-#{colourIndex}"
+    @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
-  startPairing: ->
+  pairingSetup: ->
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
-    @triggerPush = true
     @editor = atom.workspace.getActiveEditor()
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
+    @connectToPusher()
+    @synchronizeColours()
 
-    buffer = @buffer = @editor.buffer
-
+  connectToPusher: ->
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
-        user_id: "user"
+        user_id: @markerColour || "blank"
 
     @pairingChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
+  synchronizeColours: ->
     @pairingChannel.bind 'pusher:subscription_succeeded', (members) =>
-      @pairingChannel.trigger 'client-joined', {colour: @markerColour}
+      @membersCount = members.count
+      return @resubscribe() unless @markerColour
+      colours = Object.keys(members.members)
+      @friendColours = _.without(colours, @markerColour)
+      _.each(@friendColours, (colour) => @addMarker 0, colour)
+      @startPairing()
 
-    @pairingChannel.bind 'client-joined', (data) =>
+  resubscribe: ->
+    @pairingChannel.unsubscribe()
+    @markerColour = @colours[@membersCount - 1]
+    @connectToPusher()
+    @synchronizeColours()
+
+  startPairing: ->
+
+    @triggerPush = true
+    buffer = @buffer = @editor.buffer
+
+    # listening for Pusher events
+
+    @pairingChannel.bind 'pusher:member_added', (member) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
       atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
-      @syncGrammars()
       @shareCurrentFile(buffer)
-      @receiveFriendInfo(data)
-      @pairingChannel.trigger 'client-broadcast-initial-marker', {colour: @markerColour}
-
-    @pairingChannel.bind 'client-broadcast-initial-marker', (data) => @receiveFriendInfo(data)
+      @friendColours.push(member.id)
+      @addMarker 0, member.id
 
     @pairingChannel.bind 'client-grammar-sync', (syntax) =>
       grammar = atom.grammars.grammarForScopeName(syntax)
       @editor.setGrammar(grammar)
-      @syncGrammars()
 
     @pairingChannel.bind 'client-share-whole-file', (file) =>
       @triggerPush = false
@@ -159,22 +165,25 @@ module.exports = AtomPair =
       @triggerPush = true
 
     @pairingChannel.bind 'client-change', (events) =>
-      _.each(events, (event) =>
+      _.each events, (event) =>
         @changeBuffer(event) if event.eventType is 'buffer-change'
         if event.eventType is 'buffer-selection'
           @updateCollaboratorMarker(event)
-      )
 
-    @pairingChannel.bind 'client-disconnected', (data) =>
-      @clearMarkers(data.colour)
+    @pairingChannel.bind 'pusher:member_removed', (member) =>
+      @clearMarkers(member.id)
       disconnectView = new AlertView "Your pair buddy has left the session."
       atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
     @triggerEventQueue()
 
+    # listening for buffer events
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
+    @editorListeners.add @syncGrammars()
 
+
+    # listening for its own demise
     @listenForDestruction()
 
   listenForDestruction: ->
@@ -198,16 +207,16 @@ module.exports = AtomPair =
 
     if data.deletion
       @buffer.delete oldRange
-      @editor.scrollToBufferPosition(oldRange.start)
-      @addMarker oldRange.start.toArray()[0], data.colour
+      actionArea = oldRange.start
     else if oldRange.containsRange(newRange)
       @buffer.setTextInRange oldRange, newText
-      @editor.scrollToBufferPosition(oldRange.start)
-      @addMarker oldRange.start.toArray()[0], data.colour
+      actionArea = oldRange.start
     else
       @buffer.insert newRange.start, newText
-      @editor.scrollToBufferPosition(newRange.start)
-      @addMarker(newRange.end.toArray()[0], data.colour)
+      actionArea = newRange.start
+
+    @editor.scrollToBufferPosition(actionArea)
+    @addMarker(actionArea.toArray()[0], data.colour)
 
     @triggerPush = true
 
@@ -224,12 +233,11 @@ module.exports = AtomPair =
         @events = []
     , 120)
 
-  shareCurrentFile: (buffer) ->
-    currentFile = buffer.getText()
+  shareCurrentFile: ->
+    currentFile = @buffer.getText()
     return if currentFile.length is 0
-    size = Buffer.byteLength(currentFile, 'utf8')
 
-    if size < 1000
+    if currentFile.length < 950
       @pairingChannel.trigger 'client-share-whole-file', currentFile
     else
       chunks = chunkString(currentFile, 950)

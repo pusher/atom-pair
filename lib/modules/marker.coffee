@@ -3,22 +3,6 @@ _ = require 'underscore'
 
 module.exports = Marker =
 
-  assignColour: (takenColour) ->
-    colour = _.sample(@colours)
-    if colour is takenColour then @assignColour()
-
-    data = {colour: takenColour}
-    @receiveFriendInfo(data)
-    @markerColour = colour
-
-  receiveFriendInfo: (data) ->
-    friendInfo = {colour: data.colour}
-    unless _.contains(@friendColours, friendInfo.colour)
-      @friendColours.push(data.colour)
-    unless friendInfo.markerSeen
-      @addMarker 0, data.colour
-      friendInfo.markerSeen = true
-
   markRows: (rows, colour) ->
     _.each rows, (row) => @addMarker(row, colour)
 
@@ -33,7 +17,7 @@ module.exports = Marker =
     else
       _.each @timeouts, (timeout) -> clearTimeout(timeout)
       element.addClass(colour)
-      
+
   updateCollaboratorMarker: (data) ->
     @clearMarkers(data.colour)
     @markRows(data.rows, data.colour)
