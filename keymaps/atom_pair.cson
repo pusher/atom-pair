@@ -10,6 +10,9 @@
 'atom-workspace':
   'ctrl-alt-o': 'AtomPair:toggle'
   'escape': 'AtomPair:hide views'
+  'ctrl-v': 'AtomPair:custom-paste'
+  'cmd-v': 'AtomPair:custom-paste'
+
 'div.session-id':
   'cmd-c': 'AtomPair:copyid'
   'ctrl-c': 'AtomPair:copyid'
