@@ -4,6 +4,4 @@
 module.exports =
 class AlertView extends View
 
-  @content: (message)->
-    @div =>
-      @div message
+  @content: (message)-> @div => @div message

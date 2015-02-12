@@ -1,16 +1,8 @@
 {
   "name": "atom-pair",
   "main": "./lib/atom_pair",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "An Atom Package that allows for epic pair programming, powered by Pusher",
-  "activationCommands": {
-    "atom-workspace": [
-      "AtomPair:start new pairing session",
-      "AtomPair:join pairing session",
-      "AtomPair:set configuration keys",
-      "AtomPair:invite over hipchat"
-    ]
-  },
   "repository": "https://github.com/pusher/atom-pair",
   "license": "MIT",
   "engines": {
