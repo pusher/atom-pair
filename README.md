@@ -33,7 +33,7 @@ The other way - one that we use quite often - is to invite collaborators over [H
 
 We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
 
-If you have admin privileges in a HipChat organization, type `command+shift+p` and go to `AtomPair: Set configuration keys`. Enter your HipChat API key and the room you wish the invitation to be sent through. 
+If you have admin privileges in a HipChat organization, go to your Package Settings (`⌘+,` -> 'Packages' -> 'atom-pair'). Enter your HipChat API key and the room you wish the invitation to be sent through. 
 
 Now, when you enter `AtomPair: Invite Over HipChat` and enter your collaborator's HipChat @mention_name in the command palette, they will receive an invitation with a session ID.
 
@@ -51,7 +51,7 @@ To end a pairing session, go to `AtomPair: Disconnect`, and you will be disconne
 
 ##Free And Open For Everyone
 
-Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) and enter your own app key and app secret by going to `AtomPair: Set configuration keys` in the command palette. A free Sandbox plan should be more than enough for your pairing sessions.
+Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) and enter your own app key and app secret by going to your Package Settings. A free Sandbox plan should be more than enough for your pairing sessions.
 
 ###Contributing
 
