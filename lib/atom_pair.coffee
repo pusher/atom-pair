@@ -88,6 +88,12 @@ module.exports = AtomPair =
     _.each atom.workspace.getModalPanels(), (panel) -> panel.hide()
 
   joinSession: ->
+
+    if @markerColour
+      alreadyPairing = new AlertView "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
+      atom.workspace.addModalPanel(item: alreadyPairing, visible: true)
+      return
+
     @joinView = new InputView("Enter the session ID here:")
     @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
     @joinView.miniEditor.focus()
