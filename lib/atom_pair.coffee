@@ -63,8 +63,8 @@ module.exports = AtomPair =
 
   customPaste: ->
     text = atom.clipboard.read()
-    if text.length > 950
-      chunks = chunkString(text, 950)
+    if text.length > 800
+      chunks = chunkString(text, 800)
       _.each chunks, (chunk, index) =>
         setTimeout(( =>
           atom.clipboard.write(chunk)
