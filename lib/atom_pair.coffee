@@ -161,7 +161,7 @@ module.exports = AtomPair =
       noticeView = new AlertView "Your pair buddy has joined the session."
       atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
-      @shareCurrentFile(buffer)
+      @shareCurrentFile()
       @friendColours.push(member.id)
       @addMarker 0, member.id
 
@@ -197,7 +197,6 @@ module.exports = AtomPair =
     @editorListeners.add @syncSelectionRange()
     @editorListeners.add @syncGrammars()
 
-
     # listening for its own demise
     @listenForDestruction()
 
@@ -208,7 +207,6 @@ module.exports = AtomPair =
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
-
       if !(event.newText is "\n") and (event.newText.length is 0)
         changeType = 'deletion'
         event = {oldRange: event.oldRange}
