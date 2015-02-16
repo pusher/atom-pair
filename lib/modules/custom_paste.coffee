@@ -1,3 +1,6 @@
+chunkString = require '../helpers/chunk-string'
+_ = require 'underscore'
+
 module.exports = CustomPaste =
   customPaste: ->
     text = atom.clipboard.read()
