@@ -13,6 +13,7 @@ HipChatInvite = require './modules/hipchat_invite'
 Marker = require './modules/marker'
 GrammarSync = require './modules/grammar_sync'
 AtomPairConfig = require './modules/atom_pair_config'
+CustomPaste = require './modules/custom_paste'
 
 {CompositeDisposable, Range} = require 'atom'
 
@@ -59,20 +60,7 @@ module.exports = AtomPair =
     @friendColours = []
     @timeouts = []
     @events = []
-    _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig)
-
-  customPaste: ->
-    text = atom.clipboard.read()
-    if text.length > 800
-      chunks = chunkString(text, 800)
-      _.each chunks, (chunk, index) =>
-        setTimeout(( =>
-          atom.clipboard.write(chunk)
-          @editor.pasteText()
-          if index is (chunks.length - 1) then atom.clipboard.write(text)
-        ), 180 * index)
-    else
-      @editor.pasteText()
+    _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig, CustomPaste)
 
   disconnect: ->
     @pusher.disconnect()
