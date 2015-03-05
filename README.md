@@ -65,7 +65,12 @@ Here is a current list of features:
 
 But if there are any features you find lacking, feel more than welcome to [get in touch](<mailto:jamie@pusher.com>).
 
-Happy pairing!
+## To Do
+
+* Allow sharing of whole directories.
+* Make the cleanup more comprehensive and less restrictive.
+* Fix issues users have been having with snippets
+
 
  
 
