@@ -10,6 +10,7 @@ _ = require 'underscore'
 chunkString = require './helpers/chunk-string'
 
 HipChatInvite = require './modules/hipchat_invite'
+SlackInvite = require './modules/slack_invite'
 Marker = require './modules/marker'
 GrammarSync = require './modules/grammar_sync'
 AtomPairConfig = require './modules/atom_pair_config'
@@ -40,6 +41,10 @@ module.exports = AtomPair =
       type: 'string'
       description: 'Pusher App Secret'
       default: '4bf35003e819bb138249'
+    slack_url:
+      type: 'string'
+      description: 'WebHook URL for Slack Incoming Webhook Integration'
+      default: ''
 
   activate: (state) ->
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
@@ -51,6 +56,7 @@ module.exports = AtomPair =
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:set configuration keys': => @setConfig()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste()
 
     atom.commands.add 'atom-workspace', 'AtomPair:hide views': => @hidePanel()
@@ -60,7 +66,7 @@ module.exports = AtomPair =
     @friendColours = []
     @timeouts = []
     @events = []
-    _.extend(@, HipChatInvite, Marker, GrammarSync, AtomPairConfig, CustomPaste)
+    _.extend(@, HipChatInvite, SlackInvite, Marker, GrammarSync, AtomPairConfig, CustomPaste)
 
   disconnect: ->
     @pusher.disconnect()
@@ -149,7 +155,6 @@ module.exports = AtomPair =
     @triggerPush = true
 
   startPairing: ->
-
     @triggerPush = true
     buffer = @buffer = @editor.buffer
 
