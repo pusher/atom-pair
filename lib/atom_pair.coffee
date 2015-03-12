@@ -54,7 +54,6 @@ module.exports = AtomPair =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:set configuration keys': => @setConfig()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste()
