@@ -66,6 +66,7 @@ Here is a current list of features:
 * Text synchronization
 * File-sharing
 * HipChat invitations
+* Slack invitations
 * Synchronized syntax highlighting
 * Collaborator visibility.
 
