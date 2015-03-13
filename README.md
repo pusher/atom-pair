@@ -76,3 +76,11 @@ But if there are any features you find lacking, feel more than welcome to [get i
 * Allow sharing of whole directories.
 * Make the cleanup more comprehensive and less restrictive.
 * Fix issues users have been having with snippets
+
+## Credits
+
+This project is owned and maintained by [@jpatel531](http://github.com/jpatel531), a developer at [Pusher](http://pusher.com).
+
+Special thanks for contributing go to:
+
+* [@snollygolly](http://github.com/snollygolly)
