@@ -9,7 +9,7 @@ Remote pairing within the [Atom.IO](http://atom.io) text editor, powered by Push
 First off, install Atom if you haven't already. Now type into your terminal:
 
     $ apm install atom-pair
-    
+
 Alternatively, go to the command palette via `command+shift+p` and go to `Install Packages and Themes`. Then search for and install `atom-pair`.
 
 ###Invite
@@ -21,7 +21,7 @@ As detailed below, there are two ways you can invite others. Given a [free](http
 
 ####Basic Invitation
 
-Hit `command+shift+p`, and in the command palette, hit `AtomPair: Start A New Pairing Session`. 
+Hit `command+shift+p`, and in the command palette, hit `AtomPair: Start A New Pairing Session`.
 
 You will be given a session ID, hit `command+c` and paste that to a friend.
 
@@ -31,21 +31,27 @@ You will be given a session ID, hit `command+c` and paste that to a friend.
 
 The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up).
 
-We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to. 
+We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to.
 
-If you have admin privileges in a HipChat organization, go to your Package Settings (`⌘+,` -> 'Packages' -> 'atom-pair'). Enter your HipChat API key and the room you wish the invitation to be sent through. 
+If you have admin privileges in a HipChat organization, go to your Package Settings (`⌘+,` -> 'Packages' -> 'atom-pair'). Enter your HipChat API key and the room you wish the invitation to be sent through.
 
 Now, when you enter `AtomPair: Invite Over HipChat` and enter your collaborator's HipChat @mention_name in the command palette, they will receive an invitation with a session ID.
 
 ![HipChat Invite](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/hipchat.jpg)
 
+####Slack Invitation
+
+If you use [Slack](https://slack.com/) instead of HipChat, we have you covered for that too.  It works pretty much the same way as the HipChat integration.  All you need to do is log into your Slack account and click "Configure Integrations" and configure an "Incoming Webhook".  It will ask you to choose a channel you want to post messages to, but this doesn't really matter too much, you will manually specify the channel or recipient when you send the invite.  Once you set up your integration, it will give you a "Webhook URL".  You'll need to copy this URL, and put it in your atom-pair configuration where it asks for a "WebHook URL for Slack Incoming Webhook Integration".
+
+To send the invite, simply enter "AtomPair: Invite Over Slack" and enter either the channel you want to send the invite to _(#channel)_ or the person you want to send the invite to _(@person)_.  Once you do, all they have to do is join the session with the session ID and you'll be pair programming!
+
 ###Collaborate!
 
 ![Demo](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/demo.gif)
 
-Once your partner has a session ID, they should go to the command pallette and hit `AtomPair: Join a pairing session`, and enter the ID. 
+Once your partner has a session ID, they should go to the command pallette and hit `AtomPair: Join a pairing session`, and enter the ID.
 
-Once there are more than one of you in a session, your collaborators will be represented by a coloured marker in the gutter, which will changed position based on their selections and inputs. 
+Once there are more than one of you in a session, your collaborators will be represented by a coloured marker in the gutter, which will changed position based on their selections and inputs.
 
 To end a pairing session, go to `AtomPair: Disconnect`, and you will be disconnected from Pusher, and the file will be free for you to save.
 
@@ -70,9 +76,3 @@ But if there are any features you find lacking, feel more than welcome to [get i
 * Allow sharing of whole directories.
 * Make the cleanup more comprehensive and less restrictive.
 * Fix issues users have been having with snippets
-
-
- 
-
-
-

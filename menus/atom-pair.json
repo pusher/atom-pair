@@ -1,0 +1,35 @@
+{
+"menu": [
+  {
+    "label": "Packages",
+    "submenu": [
+      {
+        "label": "Atom Pair",
+        "submenu": [
+          {
+            "label": "Start New Pairing Session",
+            "command": "AtomPair:start new pairing session"
+          },
+          {
+            "label": "Join Existing Pairing Session",
+            "command": "AtomPair:join pairing session"
+          },
+          {
+            "label": "Invite",
+            "submenu": [
+              {
+                "label": "Invite Over HipChat",
+                "command": "AtomPair:invite over hipchat"
+              },
+              {
+                "label": "Invite Over Slack",
+                "command": "AtomPair:invite over slack"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
+}
