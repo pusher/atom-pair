@@ -1,20 +1,20 @@
-StartView = require './views/start-view'
-InputView = require './views/input-view'
-AlertView = require './views/alert-view'
+StartView = null
+InputView = null
+AlertView = null
 
 require './pusher/pusher'
 require './pusher/pusher-js-client-auth'
 
-randomstring = require 'randomstring'
-_ = require 'underscore'
-chunkString = require './helpers/chunk-string'
+randomstring = null
+_ = null
+chunkString = null
 
-HipChatInvite = require './modules/hipchat_invite'
-SlackInvite = require './modules/slack_invite'
-Marker = require './modules/marker'
-GrammarSync = require './modules/grammar_sync'
-AtomPairConfig = require './modules/atom_pair_config'
-CustomPaste = require './modules/custom_paste'
+HipChatInvite = null
+SlackInvite = null
+Marker = null
+GrammarSync = null
+AtomPairConfig = null
+CustomPaste = null
 
 {CompositeDisposable, Range} = require 'atom'
 
@@ -47,6 +47,21 @@ module.exports = AtomPair =
       default: ''
 
   activate: (state) ->
+    StartView = require './views/start-view'
+    InputView = require './views/input-view'
+    AlertView = require './views/alert-view'
+
+    randomstring = require 'randomstring'
+    _ = require 'underscore'
+    chunkString = require './helpers/chunk-string'
+
+    HipChatInvite = require './modules/hipchat_invite'
+    SlackInvite = require './modules/slack_invite'
+    Marker = require './modules/marker'
+    GrammarSync = require './modules/grammar_sync'
+    AtomPairConfig = require './modules/atom_pair_config'
+    CustomPaste = require './modules/custom_paste'
+
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
     @editorListeners = new CompositeDisposable
