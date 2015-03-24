@@ -131,7 +131,7 @@ module.exports = AtomPair =
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
   pairingSetup: ->
-    @editor = atom.workspace.getActiveEditor()
+    @editor = atom.workspace.getActiveTextEditor()
     if !@editor then return atom.workspace.open().then => @pairingSetup()
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
     @connectToPusher()
