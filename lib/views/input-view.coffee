@@ -1,8 +1,8 @@
-{View} = require 'space-pen'
+AtomPairView = require './atom-pair-view'
 {TextEditorView} = require 'atom-space-pen-views'
 
 module.exports =
-class InputView extends View
+class InputView extends AtomPairView
 
   @content: (label)->
     @div =>
