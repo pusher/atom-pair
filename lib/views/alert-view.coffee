@@ -1,7 +1,8 @@
-{View} = require 'space-pen'
-{TextEditorView} = require 'atom-space-pen-views'
+AtomPairView = require './atom-pair-view'
 
 module.exports =
-class AlertView extends View
+class AlertView extends AtomPairView
 
-  @content: (message)-> @div => @div message
+  @content: (message)->
+    @div tabindex: 1, =>
+      @div message

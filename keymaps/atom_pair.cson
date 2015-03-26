@@ -7,8 +7,6 @@
 
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
-'atom-workspace':
-  'escape': 'AtomPair:hide views'
 'atom-text-editor#AtomPair':
   'ctrl-v': 'AtomPair:custom-paste'
   'cmd-v': 'AtomPair:custom-paste'

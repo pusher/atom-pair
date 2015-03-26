@@ -9,18 +9,16 @@ module.exports = HipChatInvite =
     @getKeysFromConfig()
 
     if @missingPusherKeys()
-      alertView = new AlertView "Please set your Pusher keys."
-      atom.workspace.addModalPanel(item: alertView, visible: true)
+      new AlertView "Please set your Pusher keys."
     else if @missingHipChatKeys()
-      alertView = new AlertView "Please set your HipChat keys."
-      atom.workspace.addModalPanel(item: alertView, visible: true)
+      new AlertView "Please set your HipChat keys."
     else
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
-      invitePanel = atom.workspace.addModalPanel(item: inviteView, visible: true)
+      inviteView.miniEditor.focus()
       inviteView.on 'core:confirm', =>
         mentionNames = inviteView.miniEditor.getText()
         @sendHipChatMessageTo(mentionNames)
-        invitePanel.hide()
+        inviteView.panel.hide()
 
   sendHipChatMessageTo: (mentionNames) ->
 
@@ -39,7 +37,6 @@ module.exports = HipChatInvite =
         room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
       catch error
         keyErrorView = new AlertView "Something went wrong. Please check your HipChat keys."
-        atom.workspace.addModalPanel(item: keyErrorView, visible: true)
         return
 
       params =
@@ -50,6 +47,5 @@ module.exports = HipChatInvite =
 
       hc_client.postMessage params, (data) =>
         if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
-        alertView = new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
-        atom.workspace.addModalPanel(item: alertView, visible: true)
+        new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
         @startPairing()

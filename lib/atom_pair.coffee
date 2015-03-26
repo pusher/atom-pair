@@ -72,9 +72,7 @@ module.exports = AtomPair =
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste()
-
-    atom.commands.add 'atom-workspace', 'AtomPair:hide views': => @hidePanel()
-    atom.commands.add '.session-id', 'AtomPair:copyid': => @copyId()
+    @subscriptions.add atom.commands.add '.session-id', 'AtomPair:copyid': => @copyId()
 
     @colours = require('./helpers/colour-list')
     @friendColours = []
@@ -91,25 +89,20 @@ module.exports = AtomPair =
 
   copyId: -> atom.clipboard.write(@sessionId)
 
-  hidePanel: ->
-    _.each atom.workspace.getModalPanels(), (panel) -> panel.hide()
-
   joinSession: ->
 
     if @markerColour
       alreadyPairing = new AlertView "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
-      atom.workspace.addModalPanel(item: alreadyPairing, visible: true)
       return
 
-    @joinView = new InputView("Enter the session ID here:")
-    @joinPanel = atom.workspace.addModalPanel(item: @joinView, visible: true)
-    @joinView.miniEditor.focus()
+    joinView = new InputView("Enter the session ID here:")
+    joinView.miniEditor.focus()
 
-    @joinView.on 'core:confirm', =>
-      @sessionId = @joinView.miniEditor.getText()
+    joinView.on 'core:confirm', =>
+      @sessionId = joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
-      @joinPanel.hide()
+      joinView.panel.hide()
 
       atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
 
@@ -117,13 +110,10 @@ module.exports = AtomPair =
     @getKeysFromConfig()
 
     if @missingPusherKeys()
-      alertView = new AlertView "Please set your Pusher keys."
-      atom.workspace.addModalPanel(item: alertView, visible: true)
+      new AlertView "Please set your Pusher keys."
     else
       @generateSessionId()
-      @startView = new StartView(@sessionId)
-      @startPanel = atom.workspace.addModalPanel(item: @startView, visible: true)
-      @startView.focus()
+      new StartView(@sessionId)
       @markerColour = @colours[0]
       @pairingSetup()
 
@@ -170,13 +160,13 @@ module.exports = AtomPair =
 
   startPairing: ->
     @triggerPush = true
+
+    @editor ?= atom.workspace.getActiveTextEditor()
     buffer = @buffer = @editor.buffer
 
     # listening for Pusher events
-
     @pairingChannel.bind 'pusher:member_added', (member) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
-      atom.workspace.addModalPanel(item: noticeView, visible: true)
       @sendGrammar()
       @shareCurrentFile()
       @friendColours.push(member.id)
@@ -199,7 +189,6 @@ module.exports = AtomPair =
     @pairingChannel.bind 'pusher:member_removed', (member) =>
       @clearMarkers(member.id)
       disconnectView = new AlertView "Your pair buddy has left the session."
-      atom.workspace.addModalPanel(item: disconnectView, visible: true)
 
     @triggerEventQueue()
 

@@ -1,8 +1,7 @@
-{View} = require 'space-pen'
-{TextEditorView} = require 'atom-space-pen-views'
+AtomPairView = require './atom-pair-view'
 
 module.exports =
-class StartView extends View
+class StartView extends AtomPairView
 
   @content: (sessionId)->
     @div class: 'session-id', tabindex: 1, =>
