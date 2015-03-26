@@ -75,7 +75,6 @@ But if there are any features you find lacking, feel more than welcome to [get i
 ## To Do
 
 * Allow sharing of whole directories.
-* Make the cleanup more comprehensive and less restrictive.
 * Fix issues users have been having with snippets
 
 ## Credits
