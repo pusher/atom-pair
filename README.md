@@ -45,6 +45,8 @@ If you use [Slack](https://slack.com/) instead of HipChat, we have you covered f
 
 To send the invite, simply enter "AtomPair: Invite Over Slack" and enter either the channel you want to send the invite to _(#channel)_ or the person you want to send the invite to _(@person)_.  Once you do, all they have to do is join the session with the session ID and you'll be pair programming!
 
+![Slack Invite](https://raw.githubusercontent.com/pusher/atom-pair/master/images/slack.jpg)
+
 ###Collaborate!
 
 ![Demo](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/demo.gif)
