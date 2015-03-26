@@ -48,4 +48,5 @@ module.exports = HipChatInvite =
       hc_client.postMessage params, (data) =>
         if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
         new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
-        @startPairing()
+        @markerColour = @colours[0]
+        @pairingSetup()
