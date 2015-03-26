@@ -18,7 +18,7 @@ module.exports = SlackInvite =
       inviteView.on 'core:confirm', =>
         messageRcpt = inviteView.miniEditor.getText()
         @sendSlackMessageTo(messageRcpt)
-        invitePanel.panel.hide()
+        inviteView.panel.hide()
 
   sendSlackMessageTo: (messageRcpt) ->
     #prepare the slack stuff
