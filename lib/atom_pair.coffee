@@ -106,15 +106,20 @@ module.exports = AtomPair =
       atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
 
   startSession: ->
-    @getKeysFromConfig()
 
-    if @missingPusherKeys()
-      new AlertView "Please set your Pusher keys."
+    @editor = atom.workspace.getActiveTextEditor()
+    if !@editor
+      atom.workspace.open().then => @startSession()
     else
-      @generateSessionId()
-      new StartView(@sessionId)
-      @markerColour = @colours[0]
-      @pairingSetup()
+      @getKeysFromConfig()
+
+      if @missingPusherKeys()
+        new AlertView "Please set your Pusher keys."
+      else
+        @generateSessionId()
+        new StartView(@sessionId)
+        @markerColour = @colours[0]
+        @pairingSetup()
 
   generateSessionId: ->
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
