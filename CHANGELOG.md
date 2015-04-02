@@ -1,3 +1,12 @@
+####1.1.3
+
+* Package now ensures an active editor.
+* Package only registers customPaste command if user is in a pairing session.
+
+####1.1.1
+
+* Fixed issue with Slack invite
+
 ### 1.1.0
 
 * Removed deprecated calls ahead of Atom version 1.0.0.
