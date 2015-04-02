@@ -71,7 +71,6 @@ module.exports = AtomPair =
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste()
     @subscriptions.add atom.commands.add '.session-id', 'AtomPair:copyid': => @copyId()
 
     @colours = require('./helpers/colour-list')
@@ -125,6 +124,7 @@ module.exports = AtomPair =
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
     @connectToPusher()
     @synchronizeColours()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
 
   connectToPusher: ->
