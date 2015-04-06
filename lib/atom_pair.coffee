@@ -84,6 +84,7 @@ module.exports = AtomPair =
     @editorListeners.dispose()
     _.each @friendColours, (colour) => @clearMarkers(colour)
     atom.views.getView(@editor).removeAttribute('id')
+    @editor = @buffer = null
     @markerColour = null
 
   copyId: -> atom.clipboard.write(@sessionId)
