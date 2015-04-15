@@ -6,5 +6,6 @@ class InputView extends AtomPairView
 
   @content: (label)->
     @div =>
+      @span click: 'hideView', class: 'atom-pair-exit-view', "X"
       @div label
       @subview 'miniEditor', new TextEditorView(mini: true)
