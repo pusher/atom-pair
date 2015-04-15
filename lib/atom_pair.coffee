@@ -83,7 +83,7 @@ module.exports = AtomPair =
     @pusher.disconnect()
     @editorListeners.dispose()
     _.each @friendColours, (colour) => @clearMarkers(colour)
-    atom.views.getView(@editor).removeAttribute('id')
+    atom.views.getView(@editor)?.removeAttribute('id')
     @editor = @buffer = null
     @markerColour = null
 
