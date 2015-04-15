@@ -1,3 +1,12 @@
+####1.1.5
+
+Removes css id attribute of editor only if there is an active editor. 
+Added little x to close view panels.
+
+####1.1.4
+
+Ensures there are no references to a destroyed editor within the package.
+
 ####1.1.3
 
 * Package now ensures an active editor.
