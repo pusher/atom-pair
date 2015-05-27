@@ -15,7 +15,7 @@ module.exports = SlackInvite =
     else
       inviteView = new InputView("Please enter the Slack name of your pair partner (or channel name):")
       inviteView.miniEditor.focus()
-      inviteView.on 'core:confirm', =>
+      atom.commands.add inviteView.element, 'core:confirm': =>
         messageRcpt = inviteView.miniEditor.getText()
         @sendSlackMessageTo(messageRcpt)
         inviteView.panel.hide()
