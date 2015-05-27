@@ -1,7 +1,7 @@
 {
   "name": "atom-pair",
   "main": "./lib/atom_pair",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "An Atom Package that allows for epic pair programming, powered by Pusher",
   "repository": "https://github.com/pusher/atom-pair",
   "license": "MIT",
