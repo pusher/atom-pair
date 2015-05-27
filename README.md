@@ -49,7 +49,7 @@ To send the invite, simply enter "AtomPair: Invite Over Slack" and enter either 
 
 ###Collaborate!
 
-![Demo](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/demo.gif)
+![Demo](https://raw.githubusercontent.com/pusher/atom-pair/master/images/demo.gif)
 
 Once your partner has a session ID, they should go to the command pallette and hit `AtomPair: Join a pairing session`, and enter the ID.
 
