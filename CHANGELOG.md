@@ -1,3 +1,7 @@
+####1.1.6
+
+Replaces deprecated jQuery event listeners on views with Atom command registry events.
+
 ####1.1.5
 
 Removes css id attribute of editor only if there is an active editor. 
