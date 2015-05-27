@@ -7,7 +7,7 @@ module.exports =
     initialize: ->
       @panel ?= atom.workspace.addModalPanel(item: @, visible: true)
       @.focus()
-      @.on 'core:cancel', => @hideView()
+      atom.commands.add(@element, 'core:cancel', => @hideView())
 
     hideView: ->
       @panel.hide()

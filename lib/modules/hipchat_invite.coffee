@@ -15,7 +15,7 @@ module.exports = HipChatInvite =
     else
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
       inviteView.miniEditor.focus()
-      inviteView.on 'core:confirm', =>
+      atom.commands.add inviteView.element, 'core:confirm': =>
         mentionNames = inviteView.miniEditor.getText()
         @sendHipChatMessageTo(mentionNames)
         inviteView.panel.hide()

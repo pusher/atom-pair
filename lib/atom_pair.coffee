@@ -98,12 +98,11 @@ module.exports = AtomPair =
     joinView = new InputView("Enter the session ID here:")
     joinView.miniEditor.focus()
 
-    joinView.on 'core:confirm', =>
+    atom.commands.add joinView.element, 'core:confirm': =>
       @sessionId = joinView.miniEditor.getText()
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       joinView.panel.hide()
-
       atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
 
   startSession: ->
