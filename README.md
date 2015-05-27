@@ -25,7 +25,7 @@ Hit `command+shift+p`, and in the command palette, hit `AtomPair: Start A New Pa
 
 You will be given a session ID, hit `command+c` and paste that to a friend.
 
-![Basic Invite](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/invite.gif)
+![Basic Invite](https://raw.githubusercontent.com/pusher/atom-pair/master/images/invite.gif)
 
 ####HipChat Invitation
 
@@ -37,7 +37,7 @@ If you have admin privileges in a HipChat organization, go to your Package Setti
 
 Now, when you enter `AtomPair: Invite Over HipChat` and enter your collaborator's HipChat @mention_name in the command palette, they will receive an invitation with a session ID.
 
-![HipChat Invite](https://raw.githubusercontent.com/pusher/atom-pair/blog_post/images/hipchat.jpg)
+![HipChat Invite](https://raw.githubusercontent.com/pusher/atom-pair/master/images/hipchat.jpg)
 
 ####Slack Invitation
 
