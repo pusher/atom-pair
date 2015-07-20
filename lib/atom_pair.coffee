@@ -101,7 +101,8 @@ module.exports = AtomPair =
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       joinView.panel.hide()
-      atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
+      # atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
+      @pairingSetup()
 
   startSession: ->
 
@@ -113,6 +114,7 @@ module.exports = AtomPair =
       @generateSessionId()
       new StartView(@sessionId)
       @markerColour = @colours[0]
+      @leader = true
       @pairingSetup()
 
   generateSessionId: ->
@@ -158,8 +160,8 @@ module.exports = AtomPair =
     @connectToPusher()
     @synchronizeColours()
 
-  startPairing: ->
-    # editor = atom.workspace.getActiveTextEditor()
+  setUpLeadership: ->
+
     editor = @ensureActiveTextEditor()
 
     sharePane = new SharePane({
@@ -173,28 +175,47 @@ module.exports = AtomPair =
 
     @sharePanes.push(sharePane)
 
+    console.log(@sharePanes)
+
+    @globalChannel.bind 'client-created-share-pane', =>
+      sharePane.shareFile()
+      sharePane.sendGrammar()
+
+  startPairing: ->
+    # editor = atom.workspace.getActiveTextEditor()
+
+    # console.log(@sharePanes)
+    if @leader then @setUpLeadership()
+
+    @globalChannel.bind 'client-create-share-pane', (data) =>
+      console.log(data)
+      return unless data.follower is @markerColour
+      paneId = data.paneId
+      atom.workspace.open().then (editor)=>
+        sharePane = new SharePane({
+          id: paneId,
+          pusher: @pusher,
+          editor: editor,
+          sessionId: @sessionId
+        })
+        sharePane.subscribe()
+        sharePane.activate()
+        @sharePanes.push(sharePane)
+        console.log('created share pane')
+        @globalChannel.trigger 'client-created-share-pane', {toLeader: true, paneId: paneId}
+
     # GLOBAL
     @globalChannel.bind 'pusher:member_added', (member) =>
       noticeView = new AlertView "Your pair buddy has joined the session."
-
+      @friendColours.push(member.id)
+      return unless @leader
       _.each @sharePanes, (sharePane) =>
-
-        @globalChannel.trigger('client-new-share-view', {
-          id: sharePane.id # tell buddy to create shareview
+        @globalChannel.trigger('client-create-share-pane', {
+          follower: member.id,
+          paneId: sharePane.id
         })
-
-        sharePane.shareFile()
-        sharePane.sendGrammar()
         sharePane.addMarker(0, member.id)
 
-      # TODO: PARTNER MUST CREATE SHAREPANES TOO
-
-      @friendColours.push(member.id)
-
-    @globalChannel.bind 'client-new-share-view', =>
-      new ShareView({
-        # create the shareview
-      })
 
     # GLOBAL
     @globalChannel.bind 'pusher:member_removed', (member) =>
@@ -203,7 +224,9 @@ module.exports = AtomPair =
         sharePane.clearMarkers(member.id)
 
       disconnectView = new AlertView "Your pair buddy has left the session."
-
+      if member.id is 'red' and @markerColour is 'blue'
+        @leader = true
+        @setUpLeadership()
     # listening for its own demise
     @listenForDestruction()
 

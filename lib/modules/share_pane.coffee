@@ -9,8 +9,13 @@ _ = require 'underscore'
 module.exports =
 class SharePane
 
-  constructor: (options) ->
+  @all: []
 
+  @id: (id)->
+    _.findWhere(@all,{id: id})
+
+  constructor: (options) ->
+    console.log(options)
     @editor = options.editor
     @buffer = @editor.buffer
     @id = options.id || randomstring.generate(6)
