@@ -2,6 +2,7 @@ randomstring = require 'randomstring'
 Marker = null
 GrammarSync = null
 CustomPaste = null
+chunkString = null
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
 _ = require 'underscore'
@@ -33,6 +34,7 @@ class SharePane
     Marker = require './marker'
     GrammarSync = require './grammar_sync'
     CustomPaste = require './custom_paste'
+    chunkString = require '../helpers/chunk-string'
 
     _.extend(@, Marker, GrammarSync, CustomPaste)
     @constructor.all.push(@)
@@ -52,7 +54,7 @@ class SharePane
       @withoutTrigger => @buffer.setText(file)
 
     @channel.bind 'client-share-partial-file', (chunk) =>
-      @withoutTrigger => buffer.append(chunk)
+      @withoutTrigger => @buffer.append(chunk)
 
     @channel.bind 'client-change', (events) =>
       _.each events, (event) =>

@@ -9,9 +9,9 @@ module.exports = SlackInvite =
     @getKeysFromConfig()
 
     if @missingPusherKeys()
-      new AlertView "Please set your Pusher keys."
+      atom.notifications.addError('Please set your Pusher keys.')
     else if @missingSlackWebHook()
-      new AlertView "Please set your Slack Incoming WebHook"
+      atom.notifications.addError("Please set your Slack Incoming WebHook")
     else
       inviteView = new InputView("Please enter the Slack name of your pair partner (or channel name):")
       inviteView.miniEditor.focus()
@@ -34,7 +34,7 @@ module.exports = SlackInvite =
       icon_emoji: ':couple_with_heart:'
     #send a message to the user
     slack.webhook params, (err, response) =>
-      new AlertView "#{messageRcpt} has been sent an invitation. Hold tight!"
+      atom.notifications.addInfo("#{messageRcpt} has been sent an invitation. Hold tight!")
       @markerColour = @colours[0]
       @pairingSetup()
       return

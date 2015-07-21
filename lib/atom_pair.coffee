@@ -55,7 +55,6 @@ module.exports = AtomPair =
 
     randomstring = require 'randomstring'
     _ = require 'underscore'
-    chunkString = require './helpers/chunk-string'
 
     HipChatInvite = require './modules/hipchat_invite'
     SlackInvite = require './modules/slack_invite'
@@ -90,7 +89,7 @@ module.exports = AtomPair =
   joinSession: ->
 
     if @markerColour
-      alreadyPairing = new AlertView "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
+      atom.notifications.addError "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
       return
 
     joinView = new InputView("Enter the session ID here:")
@@ -109,7 +108,7 @@ module.exports = AtomPair =
     @getKeysFromConfig()
 
     if @missingPusherKeys()
-      new AlertView "Please set your Pusher keys."
+      atom.notifications.addError('Please set your Pusher keys.')
     else
       @generateSessionId()
       new StartView(@sessionId)
@@ -214,7 +213,7 @@ module.exports = AtomPair =
 
     # GLOBAL
     @globalChannel.bind 'pusher:member_added', (member) =>
-      noticeView = new AlertView "Your pair buddy has joined the session."
+      atom.notifications.addSuccess "Your pair buddy has joined the session."
       @friendColours.push(member.id)
       return unless @leader
       _.each @sharePanes, (sharePane) =>
@@ -232,7 +231,7 @@ module.exports = AtomPair =
       _.each @sharePanes, (sharePane) ->
         sharePane.clearMarkers(member.id)
 
-      disconnectView = new AlertView "Your pair buddy has left the session."
+      atom.notifications.addWarning('Your pair buddy has left the session.')
       if member.id is 'red' and @markerColour is 'blue' # TODO: MAKE LEADERSHIP SYSTEM
         @leader = true
         @setUpLeadership()
@@ -252,7 +251,7 @@ module.exports = AtomPair =
       sharePane.subscribe()
       sharePane.activate()
       @sharePanes.push(sharePane)
-      console.log(@sharePanes)
+
       @globalChannel.trigger('client-create-share-pane', {
         to: 'all',
         from: @markerColour,

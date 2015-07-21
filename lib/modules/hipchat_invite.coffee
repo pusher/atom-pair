@@ -9,9 +9,9 @@ module.exports = HipChatInvite =
     @getKeysFromConfig()
 
     if @missingPusherKeys()
-      new AlertView "Please set your Pusher keys."
+      atom.notifications.addError("Please set your Pusher keys.")
     else if @missingHipChatKeys()
-      new AlertView "Please set your HipChat keys."
+      atom.notifications.addError("Please set your HipChat keys.")
     else
       inviteView = new InputView("Please enter the HipChat mention name of your pair partner:")
       inviteView.miniEditor.focus()
@@ -36,7 +36,7 @@ module.exports = HipChatInvite =
       try
         room_id = _.findWhere(data.rooms, {name: @room_name}).room_id
       catch error
-        keyErrorView = new AlertView "Something went wrong. Please check your HipChat keys."
+        atom.notifications.addError("Something went wrong. Please check your HipChat keys.")
         return
 
       params =
@@ -47,6 +47,6 @@ module.exports = HipChatInvite =
 
       hc_client.postMessage params, (data) =>
         if collaboratorsArray.length > 1 then verb = "have" else verb = "has"
-        new AlertView "#{collaboratorsString} #{verb} been sent an invitation. Hold tight!"
+        atom.notifications.addInfo("#{collaboratorsString} #{verb} been sent an invitation. Hold tight!")
         @markerColour = @colours[0]
         @pairingSetup()
