@@ -35,6 +35,7 @@ class SharePane
     CustomPaste = require './custom_paste'
 
     _.extend(@, Marker, GrammarSync, CustomPaste)
+    @constructor.all.push(@)
 
 
   subscribe: ->

@@ -123,7 +123,8 @@ module.exports = AtomPair =
   ensureActiveTextEditor: ->
     editor = atom.workspace.getActiveTextEditor()
     if !editor
-      atom.workspace.open().then => @ensureActiveTextEditor()
+      atom.workspace.open().then =>
+        @ensureActiveTextEditor()
     else
       editor
 
@@ -174,12 +175,10 @@ module.exports = AtomPair =
     sharePane.activate()
 
     @sharePanes.push(sharePane)
+    @listenForNewTab()
 
     console.log(@sharePanes)
 
-    @globalChannel.bind 'client-created-share-pane', =>
-      sharePane.shareFile()
-      sharePane.sendGrammar()
 
   startPairing: ->
     # editor = atom.workspace.getActiveTextEditor()
@@ -187,9 +186,18 @@ module.exports = AtomPair =
     # console.log(@sharePanes)
     if @leader then @setUpLeadership()
 
+    # @listenForNewTab()
+
+
+    @globalChannel.bind 'client-created-share-pane',(data) =>
+      return unless data.to is @markerColour or data.to is 'all'
+      sharePane = SharePane.id(data.paneId)
+      sharePane.shareFile()
+      sharePane.sendGrammar()
+
     @globalChannel.bind 'client-create-share-pane', (data) =>
       console.log(data)
-      return unless data.follower is @markerColour
+      return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
       atom.workspace.open().then (editor)=>
         sharePane = new SharePane({
@@ -202,7 +210,7 @@ module.exports = AtomPair =
         sharePane.activate()
         @sharePanes.push(sharePane)
         console.log('created share pane')
-        @globalChannel.trigger 'client-created-share-pane', {toLeader: true, paneId: paneId}
+        @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
 
     # GLOBAL
     @globalChannel.bind 'pusher:member_added', (member) =>
@@ -211,7 +219,8 @@ module.exports = AtomPair =
       return unless @leader
       _.each @sharePanes, (sharePane) =>
         @globalChannel.trigger('client-create-share-pane', {
-          follower: member.id,
+          to: member.id,
+          from: @markerColour,
           paneId: sharePane.id
         })
         sharePane.addMarker(0, member.id)
@@ -224,13 +233,33 @@ module.exports = AtomPair =
         sharePane.clearMarkers(member.id)
 
       disconnectView = new AlertView "Your pair buddy has left the session."
-      if member.id is 'red' and @markerColour is 'blue'
+      if member.id is 'red' and @markerColour is 'blue' # TODO: MAKE LEADERSHIP SYSTEM
         @leader = true
         @setUpLeadership()
     # listening for its own demise
     @listenForDestruction()
 
+
+
+  listenForNewTab: ->
+    atom.workspace.onDidOpen (e) =>
+      editor = e.item
+      sharePane = new SharePane({
+        pusher: @pusher,
+        editor: editor,
+        sessionId: @sessionId
+      })
+      sharePane.subscribe()
+      sharePane.activate()
+      @sharePanes.push(sharePane)
+      console.log(@sharePanes)
+      @globalChannel.trigger('client-create-share-pane', {
+        to: 'all',
+        from: @markerColour,
+        paneId: sharePane.id
+      })
+
   listenForDestruction: ->
     _.each @sharePanes, (sharePane) =>
       sharePane.disconnectEmitter.on 'disconnected', =>
-        if (_.all @sharePanes, (pane) => !pane.connected) then @disconnect()
+        if (_.none @sharePanes, (pane) => pane.connected) then @disconnect()
