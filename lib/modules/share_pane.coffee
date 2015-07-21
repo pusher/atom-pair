@@ -12,11 +12,22 @@ class SharePane
 
   @all: []
 
+  @globalEmitter: new Emitter
+
   @id: (id)->
     _.findWhere(@all,{id: id})
 
+  @each: (fn) -> _.each(@all, fn)
+
+  @any: (fn)-> _.any(@all, fn)
+
   constructor: (options) ->
     console.log(options)
+
+    # if (SharePane.any (pane) -> (pane.editor.id is options.editor.id) or (pane.id is options.id))
+    #   @invalid = false
+    #   return
+
     @editor = options.editor
     @buffer = @editor.buffer
     @id = options.id || randomstring.generate(6)
@@ -77,9 +88,10 @@ class SharePane
     @channel.unsubscribe()
     @editorListeners.dispose()
     @connected = false
-    @disconnectEmitter.emit('disconnected')
-    @editor = @buffer = null
     atom.views.getView(@editor)?.removeAttribute('id')
+    @editor = @buffer = null
+    @constructor.globalEmitter.emit('disconnected')
+
 
   listenForDestruction: ->
     # TODO: MAKE THIS SPECIFIC TO THIS SHAREPANE
@@ -138,7 +150,9 @@ class SharePane
 
   triggerEventQueue: ->
     @eventInterval = setInterval(=>
+      # console.log('here')
       if @events.length > 0
+        console.log(@events)
         @channel.trigger 'client-change', @events
         @events = []
     , 120)
