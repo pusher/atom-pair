@@ -1,5 +1,4 @@
 InputView = require '../views/input-view'
-AlertView = require '../views/alert-view'
 Slack = require 'slack-node'
 _ = require 'underscore'
 

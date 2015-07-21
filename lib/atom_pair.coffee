@@ -1,6 +1,4 @@
-StartView = null
 InputView = null
-AlertView = null
 SharePane = null
 
 require './pusher/pusher'
@@ -49,9 +47,7 @@ module.exports = AtomPair =
 
     SharePane = require './modules/share_pane'
 
-    StartView = require './views/start-view'
     InputView = require './views/input-view'
-    AlertView = require './views/alert-view'
 
     randomstring = require 'randomstring'
     _ = require 'underscore'
@@ -111,7 +107,10 @@ module.exports = AtomPair =
       atom.notifications.addError('Please set your Pusher keys.')
     else
       @generateSessionId()
-      new StartView(@sessionId)
+      atom.clipboard.write(@sessionId)
+
+      atom.notifications.addInfo "Your session ID has been copied to your clipboard."
+
       @markerColour = @colours[0]
       @leader = true
       @pairingSetup()
@@ -170,9 +169,6 @@ module.exports = AtomPair =
       sessionId: @sessionId
     })
 
-    sharePane.subscribe()
-    sharePane.activate()
-
     @sharePanes.push(sharePane)
     @listenForNewTab()
 
@@ -205,8 +201,7 @@ module.exports = AtomPair =
           editor: editor,
           sessionId: @sessionId
         })
-        sharePane.subscribe()
-        sharePane.activate()
+
         @sharePanes.push(sharePane)
         console.log('created share pane')
         @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
@@ -248,8 +243,6 @@ module.exports = AtomPair =
         editor: editor,
         sessionId: @sessionId
       })
-      sharePane.subscribe()
-      sharePane.activate()
       @sharePanes.push(sharePane)
 
       @globalChannel.trigger('client-create-share-pane', {

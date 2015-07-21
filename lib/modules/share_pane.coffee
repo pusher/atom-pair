@@ -38,6 +38,8 @@ class SharePane
 
     _.extend(@, Marker, GrammarSync, CustomPaste)
     @constructor.all.push(@)
+    @subscribe()
+    @activate()
 
 
   subscribe: ->

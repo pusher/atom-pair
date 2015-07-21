@@ -1,5 +1,4 @@
 InputView = require '../views/input-view'
-AlertView = require '../views/alert-view'
 HipChat = require 'node-hipchat'
 _ = require 'underscore'
 
