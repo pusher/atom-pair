@@ -71,6 +71,8 @@ module.exports = AtomPair =
     @friendColours = []
     _.extend(@, HipChatInvite, SlackInvite, AtomPairConfig)
 
+    @triggerPush = @engageTabListener = true
+
   disconnect: ->
     @pusher.disconnect()
     _.each @friendColours, (colour) => SharePane.each (pane) -> pane.clearMarkers(colour)
@@ -107,6 +109,8 @@ module.exports = AtomPair =
 
       @markerColour = @colours[0]
       @leader = true
+      @leaderColour = @markerColour
+
       @pairingSetup()
 
   generateSessionId: ->
@@ -154,14 +158,14 @@ module.exports = AtomPair =
     @synchronizeColours()
 
   setUpLeadership: ->
-
     editor = @ensureActiveTextEditor()
-    console.log 'leadership pane'
+
     sharePane = new SharePane({
       editor: editor,
       pusher: @pusher,
       sessionId: @sessionId
     })
+
 
 
   startPairing: ->
@@ -181,7 +185,6 @@ module.exports = AtomPair =
       # return if SharePane.id(data.paneId)
       return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
-      @triggerPush = false
       @engageTabListener = false
       atom.workspace.open().then (editor)=>
         console.log 'told to create new sharepane'
@@ -194,7 +197,6 @@ module.exports = AtomPair =
 
         console.log('created share pane')
         @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
-        @triggerPush = true
         @engageTabListener = true
 
     # GLOBAL
@@ -213,14 +215,12 @@ module.exports = AtomPair =
 
     # GLOBAL
     @globalChannel.bind 'pusher:member_removed', (member) =>
-
-      SharePane.each (sharePane)->
-        sharePane.clearMarkers(member.id)
-
+      SharePane.each (sharePane) -> sharePane.clearMarkers(member.id)
       atom.notifications.addWarning('Your pair buddy has left the session.')
-      if member.id is 'red' and @markerColour is 'blue' # TODO: MAKE LEADERSHIP SYSTEM
-        @leader = true
-        @setUpLeadership()
+      colours = Object.keys(@globalChannel.members.members)
+      @leaderColour = _.sortBy(colours, (el) => @colours.indexOf(el))[0]
+      if @leaderColour is @markerColour then @leader = true
+
     # listening for its own demise
     @listenForDestruction()
 
