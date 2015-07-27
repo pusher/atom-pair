@@ -22,11 +22,6 @@ class SharePane
   @any: (fn)-> _.any(@all, fn)
 
   constructor: (options) ->
-    console.log(options)
-
-    # if (SharePane.any (pane) -> (pane.editor.id is options.editor.id) or (pane.id is options.id))
-    #   @invalid = false
-    #   return
 
     @editor = options.editor
     @buffer = @editor.buffer
@@ -34,6 +29,7 @@ class SharePane
     @pusher = options.pusher
     @sessionId = options.sessionId
     @triggerPush = true
+    @markerColour = options.markerColour
     @timeouts = []
     @events = []
     @editorListeners = new CompositeDisposable
@@ -150,7 +146,6 @@ class SharePane
 
   triggerEventQueue: ->
     @eventInterval = setInterval(=>
-      # console.log('here')
       if @events.length > 0
         console.log(@events)
         @channel.trigger 'client-change', @events

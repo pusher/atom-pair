@@ -163,13 +163,13 @@ module.exports = AtomPair =
     sharePane = new SharePane({
       editor: editor,
       pusher: @pusher,
-      sessionId: @sessionId
+      sessionId: @sessionId,
+      markerColour: @markerColour
     })
 
 
 
   startPairing: ->
-    # editor = atom.workspace.getActiveTextEditor()
 
     if @leader then @setUpLeadership()
 
@@ -192,7 +192,8 @@ module.exports = AtomPair =
           id: paneId,
           pusher: @pusher,
           editor: editor,
-          sessionId: @sessionId
+          sessionId: @sessionId,
+          markerColour: @markerColour
         })
 
         console.log('created share pane')
@@ -234,10 +235,10 @@ module.exports = AtomPair =
       sharePane = new SharePane({
         pusher: @pusher,
         editor: editor,
-        sessionId: @sessionId
+        sessionId: @sessionId,
+        markerColour: @markerColour
       })
-      # console.log(sharePane)
-      # return if sharePane.invalid
+
       return unless @triggerPush
       @globalChannel.trigger('client-create-share-pane', {
         to: 'all',
@@ -248,4 +249,4 @@ module.exports = AtomPair =
   listenForDestruction: ->
     SharePane.globalEmitter.on 'disconnected', =>
       console.log('disconnect')
-      if (_.any SharePane.all, (pane) => !pane.connected) then @disconnect()
+      if (_.all SharePane.all, (pane) => !pane.connected) then @disconnect()
