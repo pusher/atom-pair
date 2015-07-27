@@ -92,7 +92,6 @@ module.exports = AtomPair =
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       joinView.panel.hide()
-      # atom.workspace.open().then => @pairingSetup() #starts a new tab to join pairing session
       @pairingSetup()
 
   startSession: ->
@@ -129,7 +128,6 @@ module.exports = AtomPair =
   pairingSetup: ->
     @connectToPusher()
     @synchronizeColours()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:custom-paste': => @customPaste() #TODO: fix custom-paste
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
 
   connectToPusher: ->

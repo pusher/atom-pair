@@ -32,7 +32,10 @@ class SharePane
     @markerColour = options.markerColour
     @timeouts = []
     @events = []
+
     @editorListeners = new CompositeDisposable
+
+    @editorListeners.add(atom.commands.add atom.views.getView(@editor), 'AtomPair:custom-paste': => @customPaste()) #TODO: fix custom-paste
 
     @disconnectEmitter = new Emitter
 
