@@ -105,10 +105,14 @@ class SharePane
   listenToBufferChanges: ->
     @buffer.onDidChange (event) =>
       return unless @triggerPush
+
+      if event.newText is event.oldText and _.isEqual(event.oldRange, event.newRange)
+        return
+
       if !(event.newText is "\n") and (event.newText.length is 0)
         changeType = 'deletion'
         event = {oldRange: event.oldRange}
-      else if event.oldRange.containsRange(event.newRange)
+      else if event.oldRange.containsRange(event.newRange) or event.newRange.containsRange(event.oldRange)
         changeType = 'substitution'
         event = {oldRange: event.oldRange, newRange: event.newRange, newText: event.newText}
       else
