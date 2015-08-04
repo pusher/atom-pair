@@ -37,7 +37,7 @@ A session ID will be automatically copied to your clipboard.
 
 ####HipChat Invitation
 
-The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up).
+The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up). *You must enable client-events when you start a new app, otherwise this plugin will not work*.
 
 We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to.
 
