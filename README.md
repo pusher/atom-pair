@@ -84,11 +84,6 @@ Here is a current list of features:
 
 But if there are any features you find lacking, feel more than welcome to [get in touch](<mailto:jamie@pusher.com>).
 
-## To Do
-
-* Allow sharing of whole directories.
-* Fix issues users have been having with snippets
-
 ## Credits
 
 This project is owned and maintained by [@jpatel531](http://github.com/jpatel531), a developer at [Pusher](http://pusher.com).
