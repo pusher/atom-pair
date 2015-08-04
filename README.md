@@ -2,6 +2,14 @@
 
 Remote pairing within the [Atom.IO](http://atom.io) text editor, powered by Pusher.
 
+## Version 2.0.0
+
+* This major release allows users to share multiple tabs. Any new tabs open within a window where a pairing session is active will be synchronized across.
+* Hand-made notifications views have now been ditched in favour of using Atom's Notifications API.
+* Initiating a session automatically writes the session ID to your clipboard, allowing you to simply paste it to your partner.
+* Using autocomplete no longer leaves clients out of sync.
+
+
 ##How Do I Get Started?
 
 ###Install
