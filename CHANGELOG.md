@@ -1,3 +1,10 @@
+# 2.0.0
+
+* Support for multiple tab sharing. Any tab opened in the window of a sharing section will be synced across to the partner.
+* Killing some views in favour of Atom's Notifications API.
+* Support for autocomplete/snippets. Previously it would cause clients becoming out of sync.
+* Automatic copying of session ID to the clipboard
+
 ####1.1.6
 
 Replaces deprecated jQuery event listeners on views with Atom command registry events.
