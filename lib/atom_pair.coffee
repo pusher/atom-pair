@@ -115,15 +115,14 @@ module.exports = AtomPair =
   generateSessionId: ->
     @sessionId = "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
-  ensureActiveTextEditor: ->
+  ensureActiveTextEditor: (fn)->
     editor = atom.workspace.getActiveTextEditor()
     if !editor
       @triggerPush = false
-      atom.workspace.open().then =>
-        @ensureActiveTextEditor()
+      atom.workspace.open().then (editor)-> fn(editor)
     else
       @triggerPush = true
-      editor
+      fn(editor)
 
   pairingSetup: ->
     @connectToPusher()
@@ -156,16 +155,13 @@ module.exports = AtomPair =
     @synchronizeColours()
 
   setUpLeadership: ->
-    editor = @ensureActiveTextEditor()
-
-    sharePane = new SharePane({
-      editor: editor,
-      pusher: @pusher,
-      sessionId: @sessionId,
-      markerColour: @markerColour
-    })
-
-
+    @ensureActiveTextEditor (editor) =>
+      sharePane = new SharePane({
+        editor: editor,
+        pusher: @pusher,
+        sessionId: @sessionId,
+        markerColour: @markerColour
+      })
 
   startPairing: ->
 
