@@ -27,6 +27,7 @@ class SharePane
     @buffer = @editor.buffer
     @id = options.id || randomstring.generate(6)
     @pusher = options.pusher
+    @queue = options.queue
     @sessionId = options.sessionId
     @triggerPush = true
     @markerColour = options.markerColour
@@ -51,7 +52,6 @@ class SharePane
     @subscribe()
     @activate()
 
-
   subscribe: ->
     channelName = "presence-session-#{@sessionId}-#{@id}"
     @channel = @pusher.subscribe(channelName)
@@ -73,9 +73,6 @@ class SharePane
         @changeBuffer(event) if event.eventType is 'buffer-change'
         if event.eventType is 'buffer-selection'
           @updateCollaboratorMarker(event)
-
-    @triggerEventQueue()
-
 
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
@@ -120,7 +117,8 @@ class SharePane
         event  = {newRange: event.newRange, newText: event.newText}
 
       event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
-      @events.push(event)
+      # @events.push(event)
+      @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
     if data.event.newRange then newRange = Range.fromObject(data.event.newRange)
@@ -151,22 +149,12 @@ class SharePane
       return unless rows.length > 1
       @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
 
-  triggerEventQueue: ->
-    @eventInterval = setInterval(=>
-      if @events.length > 0
-        console.log(@events)
-        @channel.trigger 'client-change', @events
-        @events = []
-    , 120)
-
-
   shareFile: ->
     currentFile = @buffer.getText()
     return if currentFile.length is 0
 
     if currentFile.length < 950
-      @channel.trigger 'client-share-whole-file', currentFile
+      @queue.add(@channel.name, 'client-share-whole-file', currentFile)
     else
       chunks = chunkString(currentFile, 950)
-      _.each chunks, (chunk, index) =>
-        setTimeout(( => @channel.trigger 'client-share-partial-file', chunk), 180 * index)
+      _.each chunks, (chunk, index) => @queue.add @channel.name, 'client-share-partial-file', chunk

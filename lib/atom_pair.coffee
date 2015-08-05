@@ -15,6 +15,7 @@ CustomPaste = null
 Invitation = null
 HipChatInvitation = null
 SlackInvitation = null
+MessageQueue = null
 
 module.exports = AtomPair =
 
@@ -58,6 +59,7 @@ module.exports = AtomPair =
     SlackInvitation = require './modules/invitations/slack_invitation'
 
     AtomPairConfig = require './modules/atom_pair_config'
+    MessageQueue = require './modules/message_queue'
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -122,6 +124,8 @@ module.exports = AtomPair =
         secret: @app_secret
         user_id: @markerColour || "blank"
 
+    @queue = new MessageQueue(@pusher)
+
     @globalChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
   synchronizeColours: ->
@@ -139,14 +143,21 @@ module.exports = AtomPair =
     @connectToPusher()
     @synchronizeColours()
 
+  createSharePane: (editor, id) ->
+    options = {
+      editor: editor,
+      pusher: @pusher,
+      sessionId: @sessionId,
+      markerColour: @markerColour,
+      queue: @queue,
+      id: id
+    }
+
+    new SharePane(options)
+
   setUpLeadership: ->
-    @ensureActiveTextEditor (editor) =>
-      sharePane = new SharePane({
-        editor: editor,
-        pusher: @pusher,
-        sessionId: @sessionId,
-        markerColour: @markerColour
-      })
+    @ensureActiveTextEditor =>
+      _.each atom.workspace.getTextEditors(), (editor) => @createSharePane(editor)
 
   startPairing: ->
 
@@ -161,22 +172,18 @@ module.exports = AtomPair =
       sharePane.sendGrammar()
 
     @globalChannel.bind 'client-create-share-pane', (data) =>
+      # console.log(data)
       # return if SharePane.id(data.paneId)
       return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
       @engageTabListener = false
       atom.workspace.open().then (editor)=>
         console.log 'told to create new sharepane'
-        sharePane = new SharePane({
-          id: paneId,
-          pusher: @pusher,
-          editor: editor,
-          sessionId: @sessionId,
-          markerColour: @markerColour
-        })
+        @createSharePane(editor, paneId)
 
         console.log('created share pane')
-        @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
+        # @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
+        @queue.add(@globalChannel.name, 'client-created-share-pane', {to: data.from, paneId: paneId})
         @engageTabListener = true
 
     # GLOBAL
@@ -185,7 +192,7 @@ module.exports = AtomPair =
       @friendColours.push(member.id)
       return unless @leader
       SharePane.each (sharePane) =>
-        @globalChannel.trigger('client-create-share-pane', {
+        @queue.add(@globalChannel.name, 'client-create-share-pane', {
           to: member.id,
           from: @markerColour,
           paneId: sharePane.id
@@ -211,15 +218,11 @@ module.exports = AtomPair =
       return unless @engageTabListener
       editor = e.item
       console.log 'new sharepane cause new tab'
-      sharePane = new SharePane({
-        pusher: @pusher,
-        editor: editor,
-        sessionId: @sessionId,
-        markerColour: @markerColour
-      })
+      @createSharePane(editor)
 
       return unless @triggerPush
-      @globalChannel.trigger('client-create-share-pane', {
+
+      @queue.add(@globalChannel.name, 'client-create-share-pane', {
         to: 'all',
         from: @markerColour,
         paneId: sharePane.id
