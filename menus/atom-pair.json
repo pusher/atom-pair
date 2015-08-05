@@ -18,6 +18,10 @@
             "label": "Invite",
             "submenu": [
               {
+                "label": "Invite Over Flowdock",
+                "command": "AtomPair:invite over flowdock"
+              },
+              {
                 "label": "Invite Over HipChat",
                 "command": "AtomPair:invite over hipchat"
               },

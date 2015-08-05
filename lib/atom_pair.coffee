@@ -10,6 +10,7 @@ randomstring = null
 _ = null
 chunkString = null
 
+FlowdockInvite = null
 HipChatInvite = null
 SlackInvite = null
 AtomPairConfig = null
@@ -22,6 +23,10 @@ module.exports = AtomPair =
   subscriptions: null
 
   config:
+    flowdock_key:
+      type: 'string'
+      description: 'Flowdock API token'
+      default: ''
     hipchat_token:
       type: 'string'
       description: 'HipChat admin token (optional)'
@@ -52,6 +57,7 @@ module.exports = AtomPair =
     randomstring = require 'randomstring'
     _ = require 'underscore'
 
+    FlowdockInvite = require './modules/flowdock_invite'
     HipChatInvite = require './modules/hipchat_invite'
     SlackInvite = require './modules/slack_invite'
 
@@ -63,13 +69,14 @@ module.exports = AtomPair =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => @startSession()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over flowdock': => @inviteOverFlowdock()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
 
 
     @colours = require('./helpers/colour-list')
     @friendColours = []
-    _.extend(@, HipChatInvite, SlackInvite, AtomPairConfig)
+    _.extend(@, FlowdockInvite, HipChatInvite, SlackInvite, AtomPairConfig)
 
     @triggerPush = @engageTabListener = true
 
