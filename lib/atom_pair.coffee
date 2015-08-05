@@ -119,7 +119,9 @@ module.exports = AtomPair =
     editor = atom.workspace.getActiveTextEditor()
     if !editor
       @triggerPush = false
-      atom.workspace.open().then (editor)-> fn(editor)
+      atom.workspace.open().then (editor)->
+        @triggerPush = true
+        fn(editor)
     else
       @triggerPush = true
       fn(editor)
