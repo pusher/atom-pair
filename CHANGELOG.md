@@ -1,3 +1,7 @@
+#### 2.0.2
+
+* Resolve issue where `ensureActiveTextEditor` would return a promise object, and therefore raise an error.
+
 # 2.0.0
 
 * Support for multiple tab sharing. Any tab opened in the window of a sharing section will be synced across to the partner.
