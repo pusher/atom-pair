@@ -35,8 +35,6 @@ class SharePane
 
     @editorListeners = new CompositeDisposable
 
-    @disconnectEmitter = new Emitter
-
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     Marker = require './marker'

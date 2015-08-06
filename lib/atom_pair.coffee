@@ -172,17 +172,11 @@ module.exports = AtomPair =
       sharePane.sendGrammar()
 
     @globalChannel.bind 'client-create-share-pane', (data) =>
-      # console.log(data)
-      # return if SharePane.id(data.paneId)
       return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
       @engageTabListener = false
       atom.workspace.open().then (editor)=>
-        console.log 'told to create new sharepane'
         @createSharePane(editor, paneId)
-
-        console.log('created share pane')
-        # @globalChannel.trigger 'client-created-share-pane', {to: data.from, paneId: paneId}
         @queue.add(@globalChannel.name, 'client-created-share-pane', {to: data.from, paneId: paneId})
         @engageTabListener = true
 
@@ -199,7 +193,6 @@ module.exports = AtomPair =
         })
         sharePane.addMarker(0, member.id)
 
-
     # GLOBAL
     @globalChannel.bind 'pusher:member_removed', (member) =>
       SharePane.each (sharePane) -> sharePane.clearMarkers(member.id)
@@ -208,16 +201,12 @@ module.exports = AtomPair =
       @leaderColour = _.sortBy(colours, (el) => @colours.indexOf(el))[0]
       if @leaderColour is @markerColour then @leader = true
 
-    # listening for its own demise
     @listenForDestruction()
-
-
 
   listenForNewTab: ->
     atom.workspace.onDidOpen (e) =>
       return unless @engageTabListener
       editor = e.item
-      console.log 'new sharepane cause new tab'
       @createSharePane(editor)
 
       return unless @triggerPush
@@ -230,5 +219,4 @@ module.exports = AtomPair =
 
   listenForDestruction: ->
     SharePane.globalEmitter.on 'disconnected', =>
-      console.log('disconnect')
       if (_.all SharePane.all, (pane) => !pane.connected) then @disconnect()
