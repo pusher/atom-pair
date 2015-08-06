@@ -79,6 +79,7 @@ module.exports = AtomPair =
   disconnect: ->
     @pusher.disconnect()
     _.each @friendColours, (colour) => SharePane.each (pane) -> pane.clearMarkers(colour)
+    SharePane.all = []
     @markerColour = null
 
   joinSession: ->
@@ -207,10 +208,8 @@ module.exports = AtomPair =
     atom.workspace.onDidOpen (e) =>
       return unless @engageTabListener
       editor = e.item
-      @createSharePane(editor)
-
+      sharePane = @createSharePane(editor)
       return unless @triggerPush
-
       @queue.add(@globalChannel.name, 'client-create-share-pane', {
         to: 'all',
         from: @markerColour,
