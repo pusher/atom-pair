@@ -1,7 +1,6 @@
 randomstring = require 'randomstring'
 Marker = null
 GrammarSync = null
-CustomPaste = null
 chunkString = null
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
@@ -36,18 +35,15 @@ class SharePane
 
     @editorListeners = new CompositeDisposable
 
-    @editorListeners.add(atom.commands.add atom.views.getView(@editor), 'AtomPair:custom-paste': => @customPaste()) #TODO: fix custom-paste
-
     @disconnectEmitter = new Emitter
 
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     Marker = require './marker'
     GrammarSync = require './grammar_sync'
-    CustomPaste = require './custom_paste'
     chunkString = require '../helpers/chunk-string'
 
-    _.extend(@, Marker, GrammarSync, CustomPaste)
+    _.extend(@, Marker, GrammarSync)
     @constructor.all.push(@)
     @subscribe()
     @activate()
@@ -116,9 +112,11 @@ class SharePane
         changeType = 'insertion'
         event  = {newRange: event.newRange, newText: event.newText}
 
-      event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
-      # @events.push(event)
-      @queue.add(@channel.name, 'client-change', [event])
+      if event.newText and event.newText.length > 800
+        @shareFile()
+      else
+        event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
+        @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
     if data.event.newRange then newRange = Range.fromObject(data.event.newRange)
