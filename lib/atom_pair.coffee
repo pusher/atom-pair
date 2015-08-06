@@ -10,10 +10,11 @@ randomstring = null
 _ = null
 chunkString = null
 
-HipChatInvite = null
-SlackInvite = null
 AtomPairConfig = null
 CustomPaste = null
+Invitation = null
+HipChatInvitation = null
+SlackInvitation = null
 
 module.exports = AtomPair =
 
@@ -52,8 +53,9 @@ module.exports = AtomPair =
     randomstring = require 'randomstring'
     _ = require 'underscore'
 
-    HipChatInvite = require './modules/hipchat_invite'
-    SlackInvite = require './modules/slack_invite'
+    Invitation = require './modules/invitations/invitation'
+    HipChatInvitation = require './modules/invitations/hipchat_invitation'
+    SlackInvitation = require './modules/invitations/slack_invitation'
 
     AtomPairConfig = require './modules/atom_pair_config'
 
@@ -61,15 +63,14 @@ module.exports = AtomPair =
     @subscriptions = new CompositeDisposable
 
     # Register command that toggles this view
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => @startSession()
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:start new pairing session': => new Invitation(@)
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => new HipChatInvitation(@)
+    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => new SlackInvitation(@)
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:join pairing session': => @joinSession()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over hipchat': => @inviteOverHipChat()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:invite over slack': => @inviteOverSlack()
-
 
     @colours = require('./helpers/colour-list')
     @friendColours = []
-    _.extend(@, HipChatInvite, SlackInvite, AtomPairConfig)
+    _.extend(@, AtomPairConfig)
 
     @triggerPush = @engageTabListener = true
 
@@ -92,24 +93,6 @@ module.exports = AtomPair =
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       joinView.panel.hide()
-      @pairingSetup()
-
-  startSession: ->
-
-    @getKeysFromConfig()
-
-    if @missingPusherKeys()
-      atom.notifications.addError('Please set your Pusher keys.')
-    else
-      @generateSessionId()
-      atom.clipboard.write(@sessionId)
-
-      atom.notifications.addInfo "Your session ID has been copied to your clipboard."
-
-      @markerColour = @colours[0]
-      @leader = true
-      @leaderColour = @markerColour
-
       @pairingSetup()
 
   generateSessionId: ->
