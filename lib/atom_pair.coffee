@@ -208,6 +208,7 @@ module.exports = AtomPair =
     atom.workspace.onDidOpen (e) =>
       return unless @engageTabListener
       editor = e.item
+      return unless editor.constructor.name is "TextEditor"
       sharePane = @createSharePane(editor)
       return unless @triggerPush
       @queue.add(@globalChannel.name, 'client-create-share-pane', {
