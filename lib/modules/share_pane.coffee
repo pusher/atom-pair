@@ -1,7 +1,6 @@
 randomstring = require 'randomstring'
 Marker = null
 GrammarSync = null
-CustomPaste = null
 chunkString = null
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
@@ -27,6 +26,7 @@ class SharePane
     @buffer = @editor.buffer
     @id = options.id || randomstring.generate(6)
     @pusher = options.pusher
+    @queue = options.queue
     @sessionId = options.sessionId
     @triggerPush = true
     @markerColour = options.markerColour
@@ -35,22 +35,16 @@ class SharePane
 
     @editorListeners = new CompositeDisposable
 
-    @editorListeners.add(atom.commands.add atom.views.getView(@editor), 'AtomPair:custom-paste': => @customPaste()) #TODO: fix custom-paste
-
-    @disconnectEmitter = new Emitter
-
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     Marker = require './marker'
     GrammarSync = require './grammar_sync'
-    CustomPaste = require './custom_paste'
     chunkString = require '../helpers/chunk-string'
 
-    _.extend(@, Marker, GrammarSync, CustomPaste)
+    _.extend(@, Marker, GrammarSync)
     @constructor.all.push(@)
     @subscribe()
     @activate()
-
 
   subscribe: ->
     channelName = "presence-session-#{@sessionId}-#{@id}"
@@ -73,9 +67,6 @@ class SharePane
         @changeBuffer(event) if event.eventType is 'buffer-change'
         if event.eventType is 'buffer-selection'
           @updateCollaboratorMarker(event)
-
-    @triggerEventQueue()
-
 
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
@@ -119,8 +110,11 @@ class SharePane
         changeType = 'insertion'
         event  = {newRange: event.newRange, newText: event.newText}
 
-      event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
-      @events.push(event)
+      if event.newText and event.newText.length > 800
+        @shareFile()
+      else
+        event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
+        @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
     if data.event.newRange then newRange = Range.fromObject(data.event.newRange)
@@ -151,22 +145,12 @@ class SharePane
       return unless rows.length > 1
       @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
 
-  triggerEventQueue: ->
-    @eventInterval = setInterval(=>
-      if @events.length > 0
-        console.log(@events)
-        @channel.trigger 'client-change', @events
-        @events = []
-    , 120)
-
-
   shareFile: ->
     currentFile = @buffer.getText()
     return if currentFile.length is 0
 
     if currentFile.length < 950
-      @channel.trigger 'client-share-whole-file', currentFile
+      @queue.add(@channel.name, 'client-share-whole-file', currentFile)
     else
       chunks = chunkString(currentFile, 950)
-      _.each chunks, (chunk, index) =>
-        setTimeout(( => @channel.trigger 'client-share-partial-file', chunk), 180 * index)
+      _.each chunks, (chunk, index) => @queue.add @channel.name, 'client-share-partial-file', chunk
