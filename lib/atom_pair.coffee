@@ -104,12 +104,12 @@ module.exports = AtomPair =
   ensureActiveTextEditor: (fn)->
     editor = atom.workspace.getActiveTextEditor()
     if !editor
-      @triggerPush = false
+      @engageTabListener = false
       atom.workspace.open().then (editor)->
-        @triggerPush = true
+        @engageTabListener = true
         fn(editor)
     else
-      @triggerPush = true
+      @engageTabListener = true
       fn(editor)
 
   pairingSetup: ->
@@ -210,7 +210,6 @@ module.exports = AtomPair =
       editor = e.item
       return unless editor.constructor.name is "TextEditor"
       sharePane = @createSharePane(editor)
-      return unless @triggerPush
       @queue.add(@globalChannel.name, 'client-create-share-pane', {
         to: 'all',
         from: @markerColour,
