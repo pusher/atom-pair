@@ -11,7 +11,7 @@ class Invitation
     if @package.missingPusherKeys()
       atom.notifications.addError('Please set your Pusher keys.')
       return false
-    if @checkConfig then @checkConfig() else true 
+    if @checkConfig then @checkConfig() else true
 
   getRecipientName: (cta, callback)->
     inviteView = new InputView(cta)
@@ -30,7 +30,7 @@ class Invitation
   invite: ->
     return unless @configPresent()
     @package.generateSessionId()
-    if @personalized
+    if @needsInput
       @getRecipientName @askRecipientName, => @send => @afterSend()
     else
       atom.clipboard.write(@package.sessionId)

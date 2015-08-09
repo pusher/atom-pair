@@ -4,7 +4,7 @@ Slack = require 'slack-node'
 module.exports =
 class SlackInvitation extends Invitation
 
-  personalized:true
+  needsInput:true
   askRecipientName: "Please enter the Slack name of your pair partner (or channel name):"
 
   checkConfig: ->

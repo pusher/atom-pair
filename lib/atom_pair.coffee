@@ -67,10 +67,9 @@ module.exports = AtomPair =
       return
 
     joinView = new InputView("Enter the session ID here:")
-    joinView.miniEditor.focus()
 
-    atom.commands.add joinView.element, 'core:confirm': =>
-      @sessionId = joinView.miniEditor.getText()
+    joinView.onInput (text) =>
+      @sessionId = text
       keys = @sessionId.split("-")
       [@app_key, @app_secret] = [keys[0], keys[1]]
       joinView.panel.hide()
@@ -123,40 +122,38 @@ module.exports = AtomPair =
     @synchronizeColours()
 
   createSharePane: (editor, id) ->
-    options = {
+    new SharePane({
       editor: editor,
       pusher: @pusher,
       sessionId: @sessionId,
       markerColour: @markerColour,
       queue: @queue,
       id: id
-    }
+    })
 
-    new SharePane(options)
-
-  setUpLeadership: ->
+  shareOpenPanes: ->
     @ensureActiveTextEditor =>
       _.each atom.workspace.getTextEditors(), (editor) => @createSharePane(editor)
 
   startPairing: ->
 
-    if @leader then @setUpLeadership()
+    if @leader then @shareOpenPanes()
 
     @listenForNewTab()
 
-    @globalChannel.bind 'client-created-share-pane',(data) =>
+    @globalChannel.bind 'client-i-made-a-share-pane',(data) =>
       return unless data.to is @markerColour or data.to is 'all'
       sharePane = SharePane.id(data.paneId)
       sharePane.shareFile()
       sharePane.sendGrammar()
 
-    @globalChannel.bind 'client-create-share-pane', (data) =>
+    @globalChannel.bind 'client-please-make-a-share-pane', (data) =>
       return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
       @engageTabListener = false
       atom.workspace.open().then (editor)=>
         @createSharePane(editor, paneId)
-        @queue.add(@globalChannel.name, 'client-created-share-pane', {to: data.from, paneId: paneId})
+        @queue.add(@globalChannel.name, 'client-i-made-a-share-pane', {to: data.from, paneId: paneId})
         @engageTabListener = true
 
     # GLOBAL
@@ -165,7 +162,7 @@ module.exports = AtomPair =
       @friendColours.push(member.id)
       return unless @leader
       SharePane.each (sharePane) =>
-        @queue.add(@globalChannel.name, 'client-create-share-pane', {
+        @queue.add(@globalChannel.name, 'client-please-make-a-share-pane', {
           to: member.id,
           from: @markerColour,
           paneId: sharePane.id

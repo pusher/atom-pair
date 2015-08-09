@@ -13,23 +13,17 @@ class SharePane
 
   @globalEmitter: new Emitter
 
-  @id: (id)->
-    _.findWhere(@all,{id: id})
-
+  @id: (id) -> _.findWhere(@all,{id: id})
   @each: (fn) -> _.each(@all, fn)
-
   @any: (fn)-> _.any(@all, fn)
 
   constructor: (options) ->
-
-    @editor = options.editor
+    _.extend(@, options)
     @buffer = @editor.buffer
-    @id = options.id || randomstring.generate(6)
-    @pusher = options.pusher
-    @queue = options.queue
-    @sessionId = options.sessionId
+    if !@buffer then throw("buffer is nil. editor: #{@editor}")
+
+    @id ?= randomstring.generate(6)
     @triggerPush = true
-    @markerColour = options.markerColour
     @timeouts = []
     @events = []
 

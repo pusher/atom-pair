@@ -5,7 +5,7 @@ _ = require 'underscore'
 module.exports =
 class HipChatInvitation extends Invitation
 
-  personalized: true
+  needsInput: true
   askRecipientName: "Please enter the HipChat mention name of your pair partner:"
 
   checkConfig: ->

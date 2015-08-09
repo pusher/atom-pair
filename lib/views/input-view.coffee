@@ -9,3 +9,9 @@ class InputView extends AtomPairView
       @span click: 'hideView', class: 'atom-pair-exit-view', "X"
       @div label
       @subview 'miniEditor', new TextEditorView(mini: true)
+
+  onInput: (fn)->
+    @miniEditor.focus()
+    atom.commands.add @element, 'core:confirm': =>
+      @panel.hide()
+      fn(@miniEditor.getText())
