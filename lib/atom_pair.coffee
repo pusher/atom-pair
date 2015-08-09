@@ -185,7 +185,7 @@ module.exports = AtomPair =
       editor = e.item
       return unless editor.constructor.name is "TextEditor"
       sharePane = @createSharePane(editor)
-      @queue.add(@globalChannel.name, 'client-create-share-pane', {
+      @queue.add(@globalChannel.name, 'client-please-make-a-share-pane', {
         to: 'all',
         from: @markerColour,
         paneId: sharePane.id

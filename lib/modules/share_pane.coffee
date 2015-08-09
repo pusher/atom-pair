@@ -19,6 +19,7 @@ class SharePane
 
   constructor: (options) ->
     _.extend(@, options)
+    if @editor.constructor.name isnt "TextEditor" then throw("editor is of type #{@editor.constructor.name}")
     @buffer = @editor.buffer
     if !@buffer then throw("buffer is nil. editor: #{@editor}")
 

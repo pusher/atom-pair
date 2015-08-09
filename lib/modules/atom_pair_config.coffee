@@ -19,10 +19,6 @@ module.exports = AtomPairConfig =
       type: 'string'
       description: 'Pusher App Secret'
       default: '4bf35003e819bb138249'
-    pusher_app_id:
-      type: 'string'
-      description: 'Pusher App ID'
-      default: '131233'
     slack_url:
       type: 'string'
       description: 'WebHook URL for Slack Incoming Webhook Integration'
