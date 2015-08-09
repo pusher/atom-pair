@@ -2,6 +2,32 @@ _ = require 'underscore'
 
 module.exports = AtomPairConfig =
 
+  config:
+    hipchat_token:
+      type: 'string'
+      description: 'HipChat admin token (optional)'
+      default: ''
+    hipchat_room_name:
+      type: 'string'
+      description: 'HipChat room name for sending invitations (optional)'
+      default: ''
+    pusher_app_key:
+      type: 'string'
+      description: 'Pusher App Key (sign up at http://pusher.com/signup and change for added security)'
+      default: 'd41a439c438a100756f5'
+    pusher_app_secret:
+      type: 'string'
+      description: 'Pusher App Secret'
+      default: '4bf35003e819bb138249'
+    pusher_app_id:
+      type: 'string'
+      description: 'Pusher App ID'
+      default: '131233'
+    slack_url:
+      type: 'string'
+      description: 'WebHook URL for Slack Incoming Webhook Integration'
+      default: ''
+
   getKeysFromConfig: ->
     @app_key = atom.config.get 'atom-pair.pusher_app_key'
     @app_secret = atom.config.get 'atom-pair.pusher_app_secret'
