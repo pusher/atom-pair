@@ -14,6 +14,9 @@ class MessageQueue
         @pusher.channel(item.channel).trigger(item.event, item.payload)
     , 120)
 
+  dispose: ->
+    clearInterval(@interval)
+    @items = []
 
   add: (channel, event, payload) ->
     lastItem = @items[@items.length - 1]

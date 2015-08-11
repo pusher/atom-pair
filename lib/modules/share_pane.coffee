@@ -27,7 +27,6 @@ class SharePane
     @id ?= randomstring.generate(6)
     @triggerPush = true
     @timeouts = []
-    @events = []
 
     @editorListeners = new CompositeDisposable
 
@@ -94,7 +93,6 @@ class SharePane
     @constructor.globalEmitter.emit('disconnected')
 
   listenForDestruction: ->
-    # TODO: MAKE THIS SPECIFIC TO THIS SHAREPANE
     @editorListeners.add @buffer.onDidDestroy => @disconnect()
     @editorListeners.add @editor.onDidDestroy => @disconnect()
 
@@ -165,7 +163,7 @@ class SharePane
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
+      @queue.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
 
   shareFile: ->
     currentFile = @buffer.getText()

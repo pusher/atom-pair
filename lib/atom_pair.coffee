@@ -24,7 +24,6 @@ module.exports = AtomPair =
   subscriptions: null
 
   activate: (state) ->
-
     SharePane = require './modules/share_pane'
 
     InputView = require './views/input-view'
@@ -58,7 +57,14 @@ module.exports = AtomPair =
     @pusher.disconnect()
     _.each @friendColours, (colour) => SharePane.each (pane) -> pane.clearMarkers(colour)
     SharePane.all = []
+    SharePane.globalEmitter.dispose()
+    @sessionSubscriptions.dispose()
+    @queue.dispose()
     @markerColour = null
+    @friendColours = []
+    @sessionId = null
+    @membersCount = null
+    @leaderColour = null
 
   joinSession: ->
 
@@ -92,7 +98,6 @@ module.exports = AtomPair =
   pairingSetup: ->
     @connectToPusher()
     @synchronizeColours()
-    @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
 
   connectToPusher: ->
     @pusher = new Pusher @app_key,
@@ -103,7 +108,6 @@ module.exports = AtomPair =
         user_id: @markerColour || "blank"
 
     @queue = new MessageQueue(@pusher)
-
     @globalChannel = @pusher.subscribe("presence-session-#{@sessionId}")
 
   synchronizeColours: ->
@@ -137,10 +141,12 @@ module.exports = AtomPair =
       _.each atom.workspace.getTextEditors(), (editor) => @createSharePane(editor)
 
   startPairing: ->
+    @sessionSubscriptions = new CompositeDisposable
+    @sessionSubscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @disconnect()
 
     if @leader then @shareOpenPanes()
 
-    @listenForNewTab()
+    @sessionSubscriptions.add @listenForNewTab()
 
     @globalChannel.bind 'client-i-made-a-share-pane',(data) =>
       return unless data.to is @markerColour or data.to is 'all'
@@ -158,7 +164,6 @@ module.exports = AtomPair =
         @queue.add(@globalChannel.name, 'client-i-made-a-share-pane', {to: data.from, paneId: paneId})
         @engageTabListener = true
 
-    # GLOBAL
     @globalChannel.bind 'pusher:member_added', (member) =>
       atom.notifications.addSuccess "Your pair buddy has joined the session."
       @friendColours.push(member.id)
@@ -172,7 +177,6 @@ module.exports = AtomPair =
         })
         sharePane.addMarker(0, member.id)
 
-    # GLOBAL
     @globalChannel.bind 'pusher:member_removed', (member) =>
       SharePane.each (sharePane) -> sharePane.clearMarkers(member.id)
       atom.notifications.addWarning('Your pair buddy has left the session.')
