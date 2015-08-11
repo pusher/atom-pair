@@ -31,6 +31,10 @@ class SharePane
 
     @editorListeners = new CompositeDisposable
 
+    if @title
+      @setTabTitle()
+      @persistTabTitle()
+
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
     Marker = require './marker'
@@ -75,9 +79,10 @@ class SharePane
     tab.itemTitle.innerText = @title
 
   persistTabTitle: ->
-    atom.workspace.onDidOpen =>
-      console.log 'new added', @title
-      @setTabTitle()
+    openListener = atom.workspace.onDidOpen => @setTabTitle()
+    closeListener = @constructor.globalEmitter.on 'disconnected', => @setTabTitle()
+    @editorListeners.add(openListener)
+    @editorListeners.add(closeListener)
 
   disconnect: ->
     @channel.unsubscribe()

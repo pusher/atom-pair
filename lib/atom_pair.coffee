@@ -121,14 +121,15 @@ module.exports = AtomPair =
     @connectToPusher()
     @synchronizeColours()
 
-  createSharePane: (editor, id) ->
+  createSharePane: (editor, id, title) ->
     new SharePane({
       editor: editor,
       pusher: @pusher,
       sessionId: @sessionId,
       markerColour: @markerColour,
       queue: @queue,
-      id: id
+      id: id,
+      title: title
     })
 
   shareOpenPanes: ->
@@ -150,9 +151,10 @@ module.exports = AtomPair =
     @globalChannel.bind 'client-please-make-a-share-pane', (data) =>
       return unless data.to is @markerColour or data.to is 'all'
       paneId = data.paneId
+      title = data.title
       @engageTabListener = false
       atom.workspace.open().then (editor)=>
-        @createSharePane(editor, paneId)
+        pane = @createSharePane(editor, paneId, title)
         @queue.add(@globalChannel.name, 'client-i-made-a-share-pane', {to: data.from, paneId: paneId})
         @engageTabListener = true
 
@@ -165,7 +167,8 @@ module.exports = AtomPair =
         @queue.add(@globalChannel.name, 'client-please-make-a-share-pane', {
           to: member.id,
           from: @markerColour,
-          paneId: sharePane.id
+          paneId: sharePane.id,
+          title: sharePane.editor.getTitle()
         })
         sharePane.addMarker(0, member.id)
 
@@ -188,7 +191,8 @@ module.exports = AtomPair =
       @queue.add(@globalChannel.name, 'client-please-make-a-share-pane', {
         to: 'all',
         from: @markerColour,
-        paneId: sharePane.id
+        paneId: sharePane.id,
+        title: editor.getTitle()
       })
 
   listenForDestruction: ->
