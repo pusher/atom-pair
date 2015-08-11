@@ -9,7 +9,7 @@ class HipChatInvitation extends Invitation
   askRecipientName: "Please enter the HipChat mention name of your pair partner:"
 
   checkConfig: ->
-    if @package.missingHipChatKeys()
+    if @session.missingHipChatKeys()
       atom.notifications.addError("Please set your HipChat keys.")
       false
     else
@@ -21,12 +21,12 @@ class HipChatInvitation extends Invitation
       "@" + collaborator unless collaborator[0] is "@"
     ).join(", ")
 
-    hc_client = new HipChat(@package.hc_key)
+    hc_client = new HipChat(@session.hc_key)
 
     hc_client.listRooms (data) =>
 
       try
-        room_id = _.findWhere(data.rooms, {name: @package.room_name}).room_id
+        room_id = _.findWhere(data.rooms, {name: @session.room_name}).room_id
       catch error
         atom.notifications.addError("Something went wrong. Please check your HipChat keys.")
         return
@@ -34,7 +34,7 @@ class HipChatInvitation extends Invitation
       params =
         room: room_id
         from: 'AtomPair'
-        message: "Hello there #{collaboratorsString}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@package.sessionId}"
+        message: "Hello there #{collaboratorsString}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@session.id}"
         message_format: 'text'
 
       hc_client.postMessage params, (data) =>
