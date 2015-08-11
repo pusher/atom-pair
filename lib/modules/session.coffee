@@ -1,6 +1,6 @@
 require '../pusher/pusher'
 require '../pusher/pusher-js-client-auth'
-{CompositeDisposable} = require 'atom'
+{CompositeDisposable, Emitter} = require 'atom'
 AtomPairConfig = require './atom_pair_config'
 MessageQueue = require './message_queue'
 SharePane = require './share_pane'
@@ -16,7 +16,7 @@ class Session
     new invitationMethod(session)
 
   @join: ->
-    if @anyActive
+    if @active
       atom.notifications.addError "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
       return
     session = new Session
@@ -36,6 +36,7 @@ class Session
     @triggerPush = @engageTabListener = true
     @constructor.active = @
     @subscriptions = new CompositeDisposable
+    SharePane.globalEmitter = new Emitter
 
   end: ->
     @pusher.disconnect()
@@ -50,7 +51,7 @@ class Session
     @membersCount = null
     @leaderColour = null
     @active = false
-    @constructor.anyActive = false
+    @constructor.active = null
     atom.notifications.addWarning("You have been disconnected.")
 
   generateId: ->
@@ -93,6 +94,7 @@ class Session
 
   resubscribe: ->
     @channel.unsubscribe()
+    @channel.subscribed = false
     @markerColour = @colours[@membersCount - 1]
     @connectToPusher()
     @synchronizeColours()
