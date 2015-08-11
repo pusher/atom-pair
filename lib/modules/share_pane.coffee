@@ -5,6 +5,7 @@ chunkString = null
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
 _ = require 'underscore'
+$ = require 'jquery'
 
 module.exports =
 class SharePane
@@ -69,14 +70,23 @@ class SharePane
 
     @listenForDestruction()
 
+  setTabTitle: ->
+    tab = @getTab()
+    tab.itemTitle.innerText = @title
+
+  persistTabTitle: ->
+    atom.workspace.onDidOpen =>
+      console.log 'new added', @title
+      @setTabTitle()
+
   disconnect: ->
     @channel.unsubscribe()
     @editorListeners.dispose()
     @connected = false
     atom.views.getView(@editor)?.removeAttribute('id')
+    $('.atom-pair-active-icon').remove()
     @editor = @buffer = null
     @constructor.globalEmitter.emit('disconnected')
-
 
   listenForDestruction: ->
     # TODO: MAKE THIS SPECIFIC TO THIS SHAREPANE
@@ -133,6 +143,18 @@ class SharePane
 
       @editor.scrollToBufferPosition(actionArea)
       @addMarker(actionArea.toArray()[0], data.colour)
+      @setActiveIcon(data.colour)
+
+  setActiveIcon: (colour)->
+    $('.atom-pair-active-icon').remove()
+    tab = @getTab()
+    icon = $("<i class=\"icon icon-pencil atom-pair-active-icon\" style=\"color: #{colour}\"></i>")
+    tab.itemTitle.appendChild(icon[0])
+
+  getTab: ->
+    tabs = $('li[is="tabs-tab"]')
+    tab = (t for t in tabs when t.item.id is @editor.id)[0]
+    tab
 
   syncSelectionRange: ->
     @editor.onDidChangeSelectionRange (event) =>
