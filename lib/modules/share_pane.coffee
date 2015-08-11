@@ -63,9 +63,10 @@ class SharePane
 
     @channel.bind 'client-change', (events) =>
       _.each events, (event) =>
-        @changeBuffer(event) if event.eventType is 'buffer-change'
-        if event.eventType is 'buffer-selection'
-          @updateCollaboratorMarker(event)
+        @changeBuffer(event)
+
+    @channel.bind 'client-buffer-selection', (event) =>
+      @updateCollaboratorMarker(event)
 
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
@@ -121,7 +122,7 @@ class SharePane
       if event.newText and event.newText.length > 800
         @shareFile()
       else
-        event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
+        event = {changeType: changeType, event: event, colour: @markerColour}
         @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
@@ -163,7 +164,7 @@ class SharePane
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @queue.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
+      @queue.add(@channel.name, 'client-buffer-selection', {colour: @markerColour, rows: rows})
 
   shareFile: ->
     currentFile = @buffer.getText()
