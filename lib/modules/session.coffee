@@ -34,7 +34,6 @@ class Session
     @friendColours = []
     _.extend(@, AtomPairConfig)
     @triggerPush = @engageTabListener = true
-    @constructor.active = @
     @subscriptions = new CompositeDisposable
     SharePane.globalEmitter = new Emitter
 
@@ -114,8 +113,12 @@ class Session
     @ensureActiveTextEditor =>
       _.each atom.workspace.getTextEditors(), (editor) => @createSharePane(editor)
 
-  startPairing: ->
+  setActive: ->
     @active = true
+    @constructor.active = @
+
+  startPairing: ->
+    @setActive()
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @end()
     if @leader then @shareOpenPanes()
