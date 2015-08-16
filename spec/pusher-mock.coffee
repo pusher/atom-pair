@@ -10,6 +10,10 @@ module.exports =
 
     disconnect: ->
 
+    channel: (arg)->
+      @chan ?= new ChannelMock
+
+
 class ChannelMock
 
   name: 'test-channel'
@@ -23,6 +27,6 @@ class ChannelMock
   bind: (event, callback)->
     @emitter.on event, callback
 
-  trigger :->
+  trigger: (evt, payload) ->
 
   unsubscribe: ->
