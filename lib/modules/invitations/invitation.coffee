@@ -1,4 +1,5 @@
 InputView = require '../../views/input-view'
+User = require '../user'
 
 module.exports =
 class Invitation
@@ -22,9 +23,7 @@ class Invitation
       callback()
 
   afterSend: ->
-    @session.markerColour = @session.colours[0]
-    @session.leader = true
-    @session.leaderColour = @session.markerColour
+    User.addMe() unless User.me
     @session.pairingSetup()
 
   invite: ->

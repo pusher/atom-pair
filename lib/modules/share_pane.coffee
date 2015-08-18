@@ -2,6 +2,7 @@ randomstring = require 'randomstring'
 Marker = null
 GrammarSync = null
 chunkString = null
+User = require './user'
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
 _ = require 'underscore'
@@ -11,8 +12,6 @@ module.exports =
 class SharePane
 
   @all: []
-
-  @globalEmitter: new Emitter
 
   @id: (id) -> _.findWhere(@all,{id: id})
   @each: (fn) -> _.each(@all, fn)
@@ -122,7 +121,7 @@ class SharePane
       if event.newText and event.newText.length > 800
         @shareFile()
       else
-        event = {changeType: changeType, event: event, colour: @markerColour}
+        event = {changeType: changeType, event: event, colour: User.me.colour}
         @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
@@ -164,7 +163,7 @@ class SharePane
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @queue.add(@channel.name, 'client-buffer-selection', {colour: @markerColour, rows: rows})
+      @queue.add(@channel.name, 'client-buffer-selection', {colour: User.me.colour, rows: rows})
 
   shareFile: ->
     currentFile = @buffer.getText()

@@ -4,6 +4,7 @@ require '../pusher/pusher-js-client-auth'
 AtomPairConfig = require './atom_pair_config'
 MessageQueue = require './message_queue'
 SharePane = require './share_pane'
+User = require './user'
 InputView = require '../views/input-view'
 randomstring = require 'randomstring'
 _ = require 'underscore'
@@ -30,8 +31,6 @@ class Session
       session.pairingSetup()
 
   constructor: ->
-    @colours = require('../helpers/colour-list')
-    @friendColours = []
     _.extend(@, AtomPairConfig)
     @triggerPush = @engageTabListener = true
     @subscriptions = new CompositeDisposable
@@ -58,18 +57,48 @@ class Session
 
   pairingSetup: ->
     @connectToPusher()
-    @synchronizeColours()
+    @getExistingMembers()
 
   connectToPusher: ->
+    colour = User.me?.colour
+    arrivalTime = User.me?.arrivalTime
+
     @pusher = new Pusher @app_key,
       authTransport: 'client'
       clientAuth:
         key: @app_key
         secret: @app_secret
-        user_id: @markerColour || "blank"
-
+        user_id: colour || "blank"
+        user_info:
+          arrivalTime: arrivalTime || "blank"
     @queue = new MessageQueue(@pusher)
     @channel = @pusher.subscribe("presence-session-#{@id}")
+
+  getExistingMembers: ->
+    @channel.bind 'pusher:subscription_succeeded', (members) =>
+      members.each (member) ->
+        return if User.withColour(member.id) or member.id is "blank"
+        User.add(member.id, member.arrivalTime)
+        _.each User.allButMe(), (user) ->
+          SharePane.each (pane) -> pane.addMarker 0, user.colour
+      return @resubscribe() unless User.me
+      @startPairing()
+
+  resubscribe: ->
+    @channel.unsubscribe()
+    @queue.dispose()
+    User.addMe()
+    @pairingSetup()
+
+  createSharePane: (editor, id, title) ->
+    new SharePane({
+      editor: editor,
+      pusher: @pusher,
+      sessionId: @id,
+      queue: @queue,
+      id: id,
+      title: title
+    })
 
   ensureActiveTextEditor: (fn)->
     editor = atom.workspace.getActiveTextEditor()
@@ -81,33 +110,6 @@ class Session
     else
       @engageTabListener = true
       fn(editor)
-
-  synchronizeColours: ->
-    @channel.bind 'pusher:subscription_succeeded', (members) =>
-      @membersCount = members.count
-      return @resubscribe() unless @markerColour
-      colours = Object.keys(members.members)
-      @friendColours = _.without(colours, @markerColour)
-      _.each @friendColours, (colour) -> SharePane.each (pane) -> pane.addMarker 0, colour
-      @startPairing()
-
-  resubscribe: ->
-    @channel.unsubscribe()
-    @channel.subscribed = false
-    @markerColour = @colours[@membersCount - 1]
-    @connectToPusher()
-    @synchronizeColours()
-
-  createSharePane: (editor, id, title) ->
-    new SharePane({
-      editor: editor,
-      pusher: @pusher,
-      sessionId: @id,
-      markerColour: @markerColour,
-      queue: @queue,
-      id: id,
-      title: title
-    })
 
   shareOpenPanes: ->
     @ensureActiveTextEditor =>
@@ -121,17 +123,17 @@ class Session
     @setActive()
 
     @subscriptions.add atom.commands.add 'atom-workspace', 'AtomPair:disconnect': => @end()
-    if @leader then @shareOpenPanes()
+    if User.me.isLeader() then @shareOpenPanes()
     @subscriptions.add @listenForNewTab()
 
     @channel.bind 'client-i-made-a-share-pane',(data) =>
-      return unless data.to is @markerColour or data.to is 'all'
+      return unless data.to is User.me.colour or data.to is 'all'
       sharePane = SharePane.id(data.paneId)
       sharePane.shareFile()
       sharePane.sendGrammar()
 
     @channel.bind 'client-please-make-a-share-pane', (data) =>
-      return unless data.to is @markerColour or data.to is 'all'
+      return unless data.to is User.me.colour or data.to is 'all'
       paneId = data.paneId
       title = data.title
       @engageTabListener = false
@@ -142,23 +144,21 @@ class Session
 
     @channel.bind 'pusher:member_added', (member) =>
       atom.notifications.addSuccess "Your pair buddy has joined the session."
-      @friendColours.push(member.id)
-      return unless @leader
+      User.add(member.id, member.arrivalTime)
+      return unless User.me.isLeader()
       SharePane.each (sharePane) =>
         @queue.add(@channel.name, 'client-please-make-a-share-pane', {
           to: member.id,
-          from: @markerColour,
+          from: User.me.colour,
           paneId: sharePane.id,
           title: sharePane.editor.getTitle()
         })
         sharePane.addMarker(0, member.id)
 
     @channel.bind 'pusher:member_removed', (member) =>
+      User.remove(member.id)
       SharePane.each (sharePane) -> sharePane.clearMarkers(member.id)
       atom.notifications.addWarning('Your pair buddy has left the session.')
-      colours = Object.keys(@channel.members.members)
-      @leaderColour = _.sortBy(colours, (el) => @colours.indexOf(el))[0]
-      if @leaderColour is @markerColour then @leader = true
 
     @listenForDestruction()
 
@@ -170,7 +170,7 @@ class Session
       sharePane = @createSharePane(editor)
       @queue.add(@channel.name, 'client-please-make-a-share-pane', {
         to: 'all',
-        from: @markerColour,
+        from: User.me.colour,
         paneId: sharePane.id,
         title: editor.getTitle()
       })
