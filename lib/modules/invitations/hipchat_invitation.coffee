@@ -15,16 +15,18 @@ class HipChatInvitation extends Invitation
     else
       true
 
+  getHipChat: ->
+    new HipChat(@session.hc_key)
+
   send: (done) ->
     collaboratorsArray = @recipient.match(/\w+/g)
     collaboratorsString = _.map(collaboratorsArray, (collaborator) ->
       "@" + collaborator unless collaborator[0] is "@"
     ).join(", ")
 
-    hc_client = new HipChat(@session.hc_key)
+    hc_client = @getHipChat()
 
     hc_client.listRooms (data) =>
-
       try
         room_id = _.findWhere(data.rooms, {name: @session.room_name}).room_id
       catch error

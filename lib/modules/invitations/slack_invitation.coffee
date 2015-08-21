@@ -14,8 +14,10 @@ class SlackInvitation extends Invitation
     else
       true
 
+  getSlack: -> new Slack()
+
   send: (done)->
-    slack = new Slack()
+    slack = @getSlack()
     slack.setWebhook @session.slack_url
     params =
       text: "Hello there #{@recipient}. You have been invited to a pairing session. If you haven't installed the AtomPair plugin, type \`apm install atom-pair\` into your terminal. Go onto Atom, hit 'Join a pairing session', and enter this string: #{@session.id}"
