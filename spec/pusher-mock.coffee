@@ -1,4 +1,5 @@
 {Emitter} = require 'atom'
+_ = require 'underscore'
 
 module.exports =
   class PusherMock
@@ -12,6 +13,9 @@ module.exports =
 
     channel: (arg)->
       @chan ?= new ChannelMock
+
+    mockMembers: (members) ->
+      new Members members
 
 
 class ChannelMock
@@ -30,3 +34,11 @@ class ChannelMock
   trigger: (evt, payload) ->
 
   unsubscribe: ->
+
+class Members
+
+  constructor: (@members) ->
+    @members ?= []
+
+  each: (fn)->
+    _.each @members, fn

@@ -34,20 +34,15 @@ class Session
     _.extend(@, AtomPairConfig)
     @triggerPush = @engageTabListener = true
     @subscriptions = new CompositeDisposable
-    SharePane.globalEmitter = new Emitter
+    if SharePane.globalEmitter.isDisposed then SharePane.globalEmitter = new Emitter
 
   end: ->
     @pusher.disconnect()
     _.each @friendColours, (colour) => SharePane.each (pane) -> pane.clearMarkers(colour)
-    SharePane.all = []
-    SharePane.globalEmitter.dispose()
+    User.reset()
     @subscriptions.dispose()
     @queue.dispose()
-    @markerColour = null
-    @friendColours = []
     @id = null
-    @membersCount = null
-    @leaderColour = null
     @active = false
     @constructor.active = null
     atom.notifications.addWarning("You have been disconnected.")

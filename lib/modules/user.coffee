@@ -5,6 +5,10 @@ class User
 
   @colours: require('../helpers/colour-list')
 
+  @reset: ->
+    @me = null
+    @all = []
+
   @availableColours: ->
     _.reject @colours, (colour) => _.any @all, (user) -> user.colour is colour
 
@@ -17,7 +21,7 @@ class User
     _.findWhere @all, {colour: colour}
 
   @allButMe: ->
-    _.reject @all, (user) -> user is me
+    _.reject @all, (user) -> user is User.me
 
   @addMe: ->
     @me = @add(@nextAvailableColour())

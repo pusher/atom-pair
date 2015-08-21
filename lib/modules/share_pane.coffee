@@ -17,6 +17,12 @@ class SharePane
   @each: (fn) -> _.each(@all, fn)
   @any: (fn)-> _.any(@all, fn)
 
+  @globalEmitter: new Emitter
+
+  @reset: ->
+    @all = []
+    @globalEmitter.dispose()
+
   constructor: (options) ->
     _.extend(@, options)
     if @editor.constructor.name isnt "TextEditor" then throw("editor is of type #{@editor.constructor.name}")
