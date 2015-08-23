@@ -16,22 +16,26 @@ class Session
     session = @active ? new Session
     new invitationMethod(session)
 
+  @fromID: (id) ->
+    keys = id.split("-")
+    [app_key, app_secret] = [keys[0], keys[1]]
+    new Session(id, app_key, app_secret)
+
   @join: ->
     if @active
       atom.notifications.addError "It looks like you are already in a pairing session. Please open a new window (cmd+shift+N) to start/join a new one."
       return
-    session = new Session
     joinView = new InputView("Enter the session ID here:")
 
     joinView.onInput (text) =>
-      session.id = text
-      keys = session.id.split("-")
-      [session.app_key, session.app_secret] = [keys[0], keys[1]]
+      session = Session.fromID(text)
       joinView.panel.hide()
       session.pairingSetup()
 
-  constructor: ->
+  constructor: (@id, @app_key, @app_secret)->
     _.extend(@, AtomPairConfig)
+    @getKeysFromConfig()
+    @id ?= "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
     @triggerPush = @engageTabListener = true
     @subscriptions = new CompositeDisposable
     if SharePane.globalEmitter.isDisposed then SharePane.globalEmitter = new Emitter
@@ -46,9 +50,6 @@ class Session
     @active = false
     @constructor.active = null
     atom.notifications.addWarning("You have been disconnected.")
-
-  generateId: ->
-    @id ?= "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
 
   pairingSetup: ->
     @connectToPusher()
@@ -99,7 +100,7 @@ class Session
     editor = atom.workspace.getActiveTextEditor()
     if !editor
       @engageTabListener = false
-      atom.workspace.open().then (editor)->
+      atom.workspace.open().then (editor)=>
         @engageTabListener = true
         fn(editor)
     else

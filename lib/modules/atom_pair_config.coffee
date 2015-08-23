@@ -25,11 +25,11 @@ module.exports = AtomPairConfig =
       default: ''
 
   getKeysFromConfig: ->
-    @app_key = atom.config.get 'atom-pair.pusher_app_key'
-    @app_secret = atom.config.get 'atom-pair.pusher_app_secret'
-    @hc_key = atom.config.get 'atom-pair.hipchat_token'
-    @room_name = atom.config.get 'atom-pair.hipchat_room_name'
-    @slack_url = atom.config.get 'atom-pair.slack_url'
+    @app_key ?= atom.config.get 'atom-pair.pusher_app_key'
+    @app_secret ?= atom.config.get 'atom-pair.pusher_app_secret'
+    @hc_key ?= atom.config.get 'atom-pair.hipchat_token'
+    @room_name ?= atom.config.get 'atom-pair.hipchat_room_name'
+    @slack_url ?= atom.config.get 'atom-pair.slack_url'
 
   missingPusherKeys: -> _.any([@app_key, @app_secret], @missing)
   missingHipChatKeys: -> _.any([@hc_key, @room_name], @missing)

@@ -40,6 +40,21 @@ describe 'Invitation', ->
       expect(User.me).toBeDefined()
       expect(session.pairingSetup).toHaveBeenCalled()
 
+  it 'allows you to invite to an already active session', ->
+    waitsForPromise -> activationPromise
+
+    runs ->
+      atom.config.set('atom-pair.pusher_app_key', 'key')
+      atom.config.set('atom-pair.pusher_app_secret', 'secret')
+      session = new Session
+      session.id = "my_session_id"
+      Session.active = session
+      spyOn(atom.clipboard, 'write')
+      Session.initiate(Invitation)
+      expect(atom.clipboard.write).toHaveBeenCalledWith('my_session_id')
+
+
+
   describe 'SlackInvitation', ->
 
     it 'complains if there is no slack webhook url', ->

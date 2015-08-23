@@ -28,7 +28,6 @@ class Invitation
 
   invite: ->
     return unless @configPresent()
-    @session.generateId()
     if @needsInput
       @getRecipientName @askRecipientName, => @send => @afterSend()
     else

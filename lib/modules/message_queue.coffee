@@ -20,7 +20,7 @@ class MessageQueue
 
   add: (channel, event, payload) ->
     lastItem = @items[@items.length - 1]
-    if lastItem and event is 'client-change' and lastItem.channel is channel
+    if lastItem and lastItem.channel is channel and lastItem.event is event is 'client-change'
       item = {
         event: event,
         channel: channel,

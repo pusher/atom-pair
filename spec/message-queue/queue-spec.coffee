@@ -39,8 +39,14 @@ describe 'messagequeue', ->
           @queue_.add('test-channel', 'client-change', event)
         for event in ['test4, test5', 'test6']
           @queue_.add('test-channel2', 'client-change', event)
-
-        expect(@queue_.items.length).toBe(2)
+        @queue_.add('test-channel2', 'client-buffer-selection',  {
+          "colour": "blue",
+          "rows": [
+            0,
+            1
+          ]
+        })
+        expect(@queue_.items.length).toBe(3)
 
     it 'disposes correctly', ->
       waitsForPromise -> activationPromise
