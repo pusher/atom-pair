@@ -149,8 +149,6 @@ class SharePane
         else
           @buffer.insert newRange.start, newText
           actionArea = newRange.start
-
-      @editor.scrollToBufferPosition(actionArea)
       @addMarker(actionArea.toArray()[0], data.colour)
       @setActiveIcon(data.colour)
 
