@@ -3,11 +3,10 @@ PusherMock = require '../pusher-mock'
 MessageQueue = require '../../lib/modules/message_queue'
 User = require '../../lib/modules/user'
 
-module.exports = setup = (ctx, spyQueue)->
+module.exports = setup = (ctx, initialText)->
   pusher = new PusherMock 'key', 'secret'
   queue = new MessageQueue pusher
   User.addMe().colour = 'red'
-  ctx.workspaceElement = atom.views.getView(atom.workspace)
   ctx.activationPromise = atom.packages.activatePackage('atom-pair')
   ctx.openedEditor = atom.workspace.open().then (editor) =>
     ctx.sharePane = new SharePane({
@@ -19,4 +18,5 @@ module.exports = setup = (ctx, spyQueue)->
       queue: queue
     })
     ctx.buffer = ctx.sharePane.editor.buffer
+    if initialText then ctx.buffer.setText(initialText)
     ctx.sharePane.setActiveIcon = ->

@@ -52,7 +52,7 @@ describe "sharePane", ->
           range = new Range([3,0], [4,32])
           @buffer.delete(range)
 
-    it 'handles large insertations + subsituting it for small', ->
+    it 'handles large insertions + substituting it for small', ->
       awaitPromises(@)
       runs ->
         queue = @sharePane.queue
@@ -64,3 +64,30 @@ describe "sharePane", ->
         @buffer.setTextInRange(new Range([0,0], [313, 0]), 'l')
         _.each 'ala', (char, index) => @buffer.insert([0, index + 1], char)
         expect(queue.add.argsForCall).toEqual(argsForCall)
+
+describe 'sharefile', ->
+
+  awaitPromises = (ctx)->
+    waitsForPromise -> ctx.activationPromise
+    waitsForPromise -> ctx.openedEditor
+
+  it 'sends the right event for a small file', ->
+    specSetup(@, "I'm a little teapot short and stout")
+    awaitPromises(@)
+
+    runs ->
+      spyOn(@sharePane.queue, 'add')
+      @sharePane.shareFile()
+      expect(@sharePane.queue.add.argsForCall).toEqual([ [ 'test-channel', 'client-share-whole-file', "I'm a little teapot short and stout" ] ])
+
+  it 'sends the right event for a large file', ->
+    fs = require 'fs'
+    davidCopperfield = fs.readFileSync 'spec/fixtures/david_copperfield.txt', {encoding: 'utf8'}
+    specSetup(@, davidCopperfield)
+    awaitPromises(@)
+
+    runs ->
+      spyOn(@sharePane.queue, 'add')
+      @sharePane.shareFile()
+      argsForCall = require('../fixtures/large-text-for-small')[0..84]
+      expect(@sharePane.queue.add.argsForCall).toEqual(argsForCall)
