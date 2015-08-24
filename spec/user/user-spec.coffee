@@ -91,7 +91,7 @@ describe "User", ->
         id: 'green',
         arrivalTime: 60
       })
-
+      spyOn(atom.notifications, 'addWarning')
       expect(User.me.isLeader()).toBe(false)
       expect(User.all.length).toEqual(3)
       expect(_.pluck(User.all, 'colour').sort()).toEqual(['blue', 'green', 'red'])
@@ -103,3 +103,4 @@ describe "User", ->
 
       expect(User.all.length).toEqual(2)
       expect(User.me.isLeader()).toBe(true)
+      expect(atom.notifications.addWarning).toHaveBeenCalledWith('Your pair buddy has left the session.')
