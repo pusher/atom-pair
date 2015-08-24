@@ -76,7 +76,7 @@ class Session
         return if User.withColour(member.id) or member.id is "blank"
         User.add(member.id, member.arrivalTime)
         _.each User.allButMe(), (user) ->
-          SharePane.each (pane) -> pane.addMarker 0, user.colour
+          SharePane.each (pane) -> user.updatePosition(pane.getTab(), [0])
       return @resubscribe() unless User.me
       @startPairing()
 
@@ -149,11 +149,12 @@ class Session
           paneId: sharePane.id,
           title: sharePane.editor.getTitle()
         })
-        sharePane.addMarker(0, member.id)
+        User.withColour(member.id).updatePosition(sharePane.getTab(), [0])
 
     @channel.bind 'pusher:member_removed', (member) =>
-      User.remove(member.id)
-      SharePane.each (sharePane) -> sharePane.clearMarkers(member.id)
+      user = User.withColour(member.id)
+      user.clearIndicators()
+      user.remove()
       atom.notifications.addWarning('Your pair buddy has left the session.')
 
     @listenForDestruction()

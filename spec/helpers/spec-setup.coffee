@@ -19,4 +19,3 @@ module.exports = setup = (ctx, initialText)->
     })
     ctx.buffer = ctx.sharePane.editor.buffer
     if initialText then ctx.buffer.setText(initialText)
-    ctx.sharePane.setActiveIcon = ->

@@ -1,4 +1,5 @@
 _ = require 'underscore'
+PresenceIndicator = require './presence_indicator'
 
 module.exports =
 class User
@@ -36,8 +37,21 @@ class User
 
   @me: null
 
+  @clearIndicators: ->
+    _.each User.all, (user) => user.clearIndicators()
+
   constructor: (@colour, @arrivalTime)->
 
   isLeader: ->
     leader = _.sortBy(@constructor.all, 'arrivalTime')[0]
     @arrivalTime is leader.arrivalTime
+
+  remove: ->
+    User.remove(@colour)
+
+  clearIndicators: ->
+    PresenceIndicator.clearMarkers(@colour)
+
+  updatePosition: (tab, rows)->
+    PresenceIndicator.updateCollaboratorMarker(@colour, rows)
+    PresenceIndicator.setActiveIcon(tab, @colour)

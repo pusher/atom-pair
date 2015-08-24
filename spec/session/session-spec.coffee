@@ -3,9 +3,12 @@ Invitation = require '../../lib/modules/invitations/invitation'
 PusherMock = require '../pusher-mock'
 User = require '../../lib/modules/user'
 SharePane = require '../../lib/modules/share_pane'
+PresenceIndicator = require '../../lib/modules/presence_indicator'
 _ = require 'underscore'
 
 describe 'Session', ->
+
+  User.prototype.updatePosition =->
 
   activationPromise = null
   pusher = null
@@ -130,8 +133,6 @@ describe 'Session', ->
       newEditor = null
       session = null
       runs ->
-        Session.prototype.shareOpenPanes = ->
-        SharePane.prototype.setTabTitle =->
         session = setUpSession()
 
         spyOn(session.queue, 'add')

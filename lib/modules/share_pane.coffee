@@ -1,5 +1,4 @@
 randomstring = require 'randomstring'
-Marker = null
 GrammarSync = null
 chunkString = null
 User = require './user'
@@ -31,7 +30,6 @@ class SharePane
 
     @id ?= randomstring.generate(6)
     @triggerPush = true
-    @timeouts = []
 
     @editorListeners = new CompositeDisposable
 
@@ -41,11 +39,10 @@ class SharePane
 
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
-    Marker = require './marker'
     GrammarSync = require './grammar_sync'
     chunkString = require '../helpers/chunk-string'
 
-    _.extend(@, Marker, GrammarSync)
+    _.extend(@, GrammarSync)
     @constructor.all.push(@)
     @subscribe()
     @activate()
@@ -71,7 +68,7 @@ class SharePane
         @changeBuffer(event)
 
     @channel.bind 'client-buffer-selection', (event) =>
-      @updateCollaboratorMarker(event)
+      User.withColour(event.colour).updatePosition(@getTab(), event.rows)
 
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
@@ -136,9 +133,6 @@ class SharePane
     if data.event.newText then newText = data.event.newText
 
     @withoutTrigger =>
-
-      @clearMarkers(data.colour)
-
       switch data.changeType
         when 'deletion'
           @buffer.delete oldRange
@@ -149,14 +143,7 @@ class SharePane
         else
           @buffer.insert newRange.start, newText
           actionArea = newRange.start
-      @addMarker(actionArea.toArray()[0], data.colour)
-      @setActiveIcon(data.colour)
-
-  setActiveIcon: (colour)->
-    $('.atom-pair-active-icon').remove()
-    tab = @getTab()
-    icon = $("<i class=\"icon icon-pencil atom-pair-active-icon\" style=\"color: #{colour}\"></i>")
-    tab.itemTitle.appendChild(icon[0])
+      User.withColour(data.colour).updatePosition(@getTab(), [actionArea.toArray()[0]])
 
   getTab: ->
     tabs = $('li[is="tabs-tab"]')
