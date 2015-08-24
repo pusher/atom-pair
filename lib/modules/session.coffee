@@ -43,7 +43,8 @@ class Session
   end: ->
     @pusher.disconnect()
     _.each @friendColours, (colour) => SharePane.each (pane) -> pane.clearMarkers(colour)
-    User.reset()
+    User.clear()
+    SharePane.clear()
     @subscriptions.dispose()
     @queue.dispose()
     @id = null

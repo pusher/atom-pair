@@ -6,7 +6,7 @@ class User
 
   @colours: require('../helpers/colour-list')
 
-  @reset: ->
+  @clear: ->
     @me = null
     @all = []
 

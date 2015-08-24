@@ -5,11 +5,13 @@ module.exports =
   class PusherMock
 
     constructor: (@key, @secret) ->
+      @connected = true
 
     subscribe: ->
       new ChannelMock
 
     disconnect: ->
+      @connected = false
 
     channel: (arg)->
       @chan ?= new ChannelMock

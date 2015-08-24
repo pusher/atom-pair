@@ -14,7 +14,7 @@ describe "User", ->
     activationPromise = atom.packages.activatePackage('atom-pair')
     pusher = new PusherMock
     spyOn(window, 'Pusher').andReturn(pusher)
-    User.reset()
+    User.clear()
 
   afterEach ->
     session.end()

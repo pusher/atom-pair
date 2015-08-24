@@ -18,7 +18,7 @@ class SharePane
 
   @globalEmitter: new Emitter
 
-  @reset: ->
+  @clear: ->
     @all = []
     @globalEmitter.dispose()
 

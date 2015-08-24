@@ -92,8 +92,8 @@ describe 'Session', ->
           })
           expect(pane.shareFile).toHaveBeenCalled()
           expect(pane.sendGrammar).toHaveBeenCalled()
-        SharePane.reset()
         _.each atom.workspace.getPaneItems(), (pane) -> pane.destroy()
+        SharePane.clear()
 
     it 'creates new tabs on receipt of please-make-a-sharepane event', ->
       waitsForPromise -> activationPromise
@@ -123,7 +123,7 @@ describe 'Session', ->
         expect(atom.workspace.getTextEditors().length).toEqual(1)
         expect(SharePane.all.length).toEqual(1)
         expect(SharePane.all[0].id).toEqual('hello')
-        SharePane.reset()
+        SharePane.clear()
 
     it 'syncs newly opened panes', ->
       waitsForPromise -> activationPromise
@@ -159,3 +159,44 @@ describe 'Session', ->
         })
         expect(pane.shareFile).toHaveBeenCalled()
         expect(pane.sendGrammar).toHaveBeenCalled()
+        SharePane.clear()
+
+  describe 'disconnection', ->
+
+    it 'resets state on disconnect',->
+      newEditor = null
+      session = null
+      waitsFor -> activationPromise
+
+      runs ->
+        atom.config.set('atom-pair.pusher_app_key', 'key')
+        atom.config.set('atom-pair.pusher_app_secret', 'secret')
+        session = new Session
+        new Invitation(session)
+        session.channel.fakeSend('pusher:subscription_succeeded', pusher.mockMembers([
+            {id: 'blue', arrivalTime: 1}
+        ]))
+        session.channel.fakeSend('client-please-make-a-share-pane', {
+            to: User.me.colour,
+            from: 'blue'
+            paneId: 'hello',
+            title: 'untitled'
+        })
+
+        atom.workspace.onDidOpen ({item})-> newEditor = item
+
+      waitsFor -> !!newEditor
+      runs ->
+        expect(User.all.length).toEqual(2)
+        expect(SharePane.all.length).toEqual(1)
+        spyOn(session.queue, 'dispose')
+        session.end()
+        expect(pusher.connected).toBe(false)
+        expect(User.all.length).toBe(0)
+        expect(User.me).toBe(null)
+        expect(SharePane.all.length).toBe(0)
+        expect(session.subscriptions.disposed).toBe(true)
+        expect(session.queue.dispose).toHaveBeenCalled()
+        expect(session.id).toBe(null)
+        expect(Session.active).toBe(null)
+        expect(session.active).toBe(false)
