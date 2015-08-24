@@ -14,10 +14,13 @@ class MessageQueue
         @pusher.channel(item.channel).trigger(item.event, item.payload)
     , 120)
 
+  dispose: ->
+    clearInterval(@interval)
+    @items = []
 
   add: (channel, event, payload) ->
     lastItem = @items[@items.length - 1]
-    if lastItem and event is 'client-change' and lastItem.channel is channel
+    if lastItem and lastItem.channel is channel and lastItem.event is event is 'client-change'
       item = {
         event: event,
         channel: channel,

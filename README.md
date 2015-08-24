@@ -1,4 +1,5 @@
 # AtomPair
+[![Build Status](https://travis-ci.org/pusher/atom-pair.svg?branch=tweaks)](https://travis-ci.org/pusher/atom-pair)
 
 Remote pairing within the [Atom](http://atom.io) text editor, powered by Pusher.
 

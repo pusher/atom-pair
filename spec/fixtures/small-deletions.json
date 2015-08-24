@@ -1,0 +1,375 @@
+[
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 0
+          },
+          "end": {
+            "row": 0,
+            "column": 0
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 0
+          },
+          "end": {
+            "row": 0,
+            "column": 1
+          }
+        },
+        "newText": "h"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 1
+          },
+          "end": {
+            "row": 0,
+            "column": 1
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 1
+          },
+          "end": {
+            "row": 0,
+            "column": 2
+          }
+        },
+        "newText": "e"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 2
+          },
+          "end": {
+            "row": 0,
+            "column": 2
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 2
+          },
+          "end": {
+            "row": 0,
+            "column": 3
+          }
+        },
+        "newText": "l"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 3
+          },
+          "end": {
+            "row": 0,
+            "column": 3
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 3
+          },
+          "end": {
+            "row": 0,
+            "column": 4
+          }
+        },
+        "newText": "l"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 4
+          },
+          "end": {
+            "row": 0,
+            "column": 4
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 4
+          },
+          "end": {
+            "row": 0,
+            "column": 5
+          }
+        },
+        "newText": "o"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 5
+          },
+          "end": {
+            "row": 0,
+            "column": 5
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 5
+          },
+          "end": {
+            "row": 0,
+            "column": 6
+          }
+        },
+        "newText": " "
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 6
+          },
+          "end": {
+            "row": 0,
+            "column": 6
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 6
+          },
+          "end": {
+            "row": 0,
+            "column": 7
+          }
+        },
+        "newText": "w"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 7
+          },
+          "end": {
+            "row": 0,
+            "column": 7
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 7
+          },
+          "end": {
+            "row": 0,
+            "column": 8
+          }
+        },
+        "newText": "o"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 8
+          },
+          "end": {
+            "row": 0,
+            "column": 8
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 8
+          },
+          "end": {
+            "row": 0,
+            "column": 9
+          }
+        },
+        "newText": "r"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 9
+          },
+          "end": {
+            "row": 0,
+            "column": 9
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 9
+          },
+          "end": {
+            "row": 0,
+            "column": 10
+          }
+        },
+        "newText": "l"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 10
+          },
+          "end": {
+            "row": 0,
+            "column": 10
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 10
+          },
+          "end": {
+            "row": 0,
+            "column": 11
+          }
+        },
+        "newText": "d"
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "deletion",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 10
+          },
+          "end": {
+            "row": 0,
+            "column": 11
+          }
+        }
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "deletion",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 9
+          },
+          "end": {
+            "row": 0,
+            "column": 10
+          }
+        }
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "deletion",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 1
+          },
+          "end": {
+            "row": 0,
+            "column": 2
+          }
+        }
+      },
+      "colour": "red"
+    }
+  ]
+]

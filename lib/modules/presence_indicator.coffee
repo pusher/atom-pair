@@ -1,7 +1,8 @@
 $ = require 'jquery'
 _ = require 'underscore'
 
-module.exports = Marker =
+module.exports = PresenceIndicator =
+  timeouts: []
 
   markRows: (rows, colour) ->
     _.each rows, (row) => @addMarker(row, colour)
@@ -18,6 +19,11 @@ module.exports = Marker =
       _.each @timeouts, (timeout) -> clearTimeout(timeout)
       element.addClass(colour)
 
-  updateCollaboratorMarker: (data) ->
-    @clearMarkers(data.colour)
-    @markRows(data.rows, data.colour)
+  updateCollaboratorMarker: (colour, rows) ->
+    @clearMarkers(colour)
+    @markRows(rows, colour)
+
+  setActiveIcon: (tab, colour)->
+    $('.atom-pair-active-icon').remove()
+    icon = $("<i class=\"icon icon-pencil atom-pair-active-icon\" style=\"color: #{colour}\"></i>")
+    tab.itemTitle.appendChild(icon[0])
