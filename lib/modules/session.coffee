@@ -15,6 +15,7 @@ class Session
   @initiate: (invitationMethod)->
     session = @active ? new Session
     new invitationMethod(session)
+    session
 
   @fromID: (id) ->
     keys = id.split("-")
