@@ -75,6 +75,7 @@ Currently, you are given default Pusher credentials when you install the package
 Here is a current list of features:
 
 * Text synchronization
+* Multiple tab syncing
 * File-sharing
 * HipChat invitations
 * Slack invitations
@@ -82,6 +83,31 @@ Here is a current list of features:
 * Collaborator visibility.
 
 But if there are any features you find lacking, feel more than welcome to [get in touch](<mailto:jamie@pusher.com>).
+
+### Running Tests
+
+To run the tests, just type into your command line at the root of the project:
+  
+    $ apm test
+
+### Adding New Methods of Invitation
+
+Currently there is support for inviting people over HipChat and Slack. If you would like to invite friends or colleagues through any other integration, there is a mini-API to make this more simple. All you have to do is inherit from our `Invitation` class and implement two methods:
+
+```coffee
+class YourInvitation extends Invitation
+
+  checkConfig: ->
+     # Must be implemented
+     # Returns false if they are missing your integration's API keys, otherwise true.
+
+  send: (callback)->
+    # Must be implemented
+    # Send your invitation and simple call the callback when you're done.
+
+```
+
+See [here](https://github.com/pusher/atom-pair/blob/master/lib/modules/invitations/slack_invitation.coffee) for an example.
 
 ## Credits
 
