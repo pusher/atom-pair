@@ -66,7 +66,7 @@ describe "User", ->
       ))
 
       expect(window.Pusher.argsForCall.length).toBe(2)
-      expect(window.Pusher.argsForCall).toEqual([ [ 'key', { authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ 'key', { authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
+      expect(window.Pusher.argsForCall).toEqual([ [ 'key', { encrypted: true, authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ 'key', { encrypted: true, authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
       expect(User.all.length).toBe(2)
       expect(User.me.isLeader()).toBe(false)
       expect(User.me.colour).not.toBe('red')
