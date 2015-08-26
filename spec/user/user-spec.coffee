@@ -12,7 +12,7 @@ describe "User", ->
 
   beforeEach ->
     activationPromise = atom.packages.activatePackage('atom-pair')
-    pusher = new PusherMock
+    pusher = new PusherMock 'key', 'secret'
     spyOn(window, 'Pusher').andReturn(pusher)
     User.clear()
 
@@ -57,7 +57,8 @@ describe "User", ->
 
     runs ->
       spyOn(window, 'Date').andReturn({getTime: -> 30})
-
+      atom.config.set('atom-pair.pusher_app_key', 'key')
+      atom.config.set('atom-pair.pusher_app_secret', 'secret')
       session = new Session
       session.pairingSetup()
       session.channel.fakeSend('pusher:subscription_succeeded', pusher.mockMembers(
@@ -65,7 +66,7 @@ describe "User", ->
       ))
 
       expect(window.Pusher.argsForCall.length).toBe(2)
-      expect(window.Pusher.argsForCall).toEqual([ [ undefined, { authTransport : 'client', clientAuth : { key : undefined, secret : undefined, user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ undefined, { authTransport : 'client', clientAuth : { key : undefined, secret : undefined, user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
+      expect(window.Pusher.argsForCall).toEqual([ [ 'key', { authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ 'key', { authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
       expect(User.all.length).toBe(2)
       expect(User.me.isLeader()).toBe(false)
       expect(User.me.colour).not.toBe('red')

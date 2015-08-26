@@ -4,6 +4,8 @@ Invitation = null
 HipChatInvitation = null
 SlackInvitation = null
 Session = null
+_ = null
+AtomPairConfig = null
 
 module.exports = AtomPair =
 
@@ -12,9 +14,12 @@ module.exports = AtomPair =
   subscriptions: null
 
   activate: (state) ->
+    _ = require 'underscore'
     Invitation = require './modules/invitations/invitation'
     HipChatInvitation = require './modules/invitations/hipchat_invitation'
     SlackInvitation = require './modules/invitations/slack_invitation'
+    AtomPairConfig = require './modules/atom_pair_config'
+    _.extend(@, AtomPairConfig)
 
     Session = require './modules/session'
 

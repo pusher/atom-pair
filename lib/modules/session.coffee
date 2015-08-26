@@ -1,7 +1,6 @@
 require '../pusher/pusher'
 require '../pusher/pusher-js-client-auth'
 {CompositeDisposable, Emitter} = require 'atom'
-AtomPairConfig = require './atom_pair_config'
 MessageQueue = require './message_queue'
 SharePane = require './share_pane'
 User = require './user'
@@ -34,7 +33,6 @@ class Session
       session.pairingSetup()
 
   constructor: (@id, @app_key, @app_secret)->
-    _.extend(@, AtomPairConfig)
     @getKeysFromConfig()
     @id ?= "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
     @triggerPush = @engageTabListener = true
@@ -177,3 +175,15 @@ class Session
   listenForDestruction: ->
     SharePane.globalEmitter.on 'disconnected', =>
       if (_.all SharePane.all, (pane) => !pane.connected) then @end()
+
+  getKeysFromConfig: ->
+    @app_key ?= atom.config.get 'atom-pair.pusher_app_key'
+    @app_secret ?= atom.config.get 'atom-pair.pusher_app_secret'
+    @hc_key ?= atom.config.get 'atom-pair.hipchat_token'
+    @room_name ?= atom.config.get 'atom-pair.hipchat_room_name'
+    @slack_url ?= atom.config.get 'atom-pair.slack_url'
+
+  missingPusherKeys: -> _.any([@app_key, @app_secret], @missing)
+  missingHipChatKeys: -> _.any([@hc_key, @room_name], @missing)
+  missingSlackWebHook: -> _.any([@slack_url], @missing)
+  missing: (key) -> key is '' || typeof(key) is "undefined"
