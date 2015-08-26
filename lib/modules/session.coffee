@@ -62,6 +62,7 @@ class Session
     arrivalTime = User.me?.arrivalTime
 
     @pusher = new Pusher @app_key,
+      encrypted: true
       authTransport: 'client'
       clientAuth:
         key: @app_key
