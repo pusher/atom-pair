@@ -17,6 +17,8 @@ describe 'Invitation', ->
   it 'complains if there are no Pusher keys', ->
     waitsForPromise -> activationPromise
     runs ->
+      atom.config.set('atom-pair.pusher_app_key', '')
+      atom.config.set('atom-pair.pusher_app_secret', '')
       session = new Session
       spyOn(atom.notifications, 'addError')
       invitation = new Invitation(session)
