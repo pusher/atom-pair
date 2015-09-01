@@ -37,7 +37,7 @@ class Session
     @id ?= "#{@app_key}-#{@app_secret}-#{randomstring.generate(11)}"
     @triggerPush = @engageTabListener = true
     @subscriptions = new CompositeDisposable
-    if SharePane.globalEmitter.isDisposed then SharePane.globalEmitter = new Emitter
+    if SharePane.globalEmitter.disposed then SharePane.globalEmitter = new Emitter
 
   end: ->
     @pusher.disconnect()

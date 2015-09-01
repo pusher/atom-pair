@@ -39,12 +39,12 @@ describe 'SharePane:disconnect',->
       sharePane = SharePane.all[0]
       expect(sharePane.editorListeners.disposed).toBe(false)
       expect(sharePane.buffer).toBeDefined()
-      expect(SharePane.globalEmitter.isDisposed).toBe(false)
+      expect(SharePane.globalEmitter.disposed).toBe(false)
       sharePane.disconnect()
       expect(SharePane.all.length).toEqual(0)
       expect(sharePane.editorListeners.disposed).toBe(true)
       expect(sharePane.buffer).toBe(null)
-      expect(SharePane.globalEmitter.isDisposed).toBe(true)
+      expect(SharePane.globalEmitter.disposed).toBe(true)
 
   it 'closes the session if all sharepanes have been destroyed', ->
     waitsForPromise -> activationPromise
