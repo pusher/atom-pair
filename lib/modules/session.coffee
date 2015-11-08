@@ -141,6 +141,7 @@ class Session
         @engageTabListener = true
 
     @channel.bind 'pusher:member_added', (member) =>
+      if member.id is "blank" then return
       atom.notifications.addSuccess "Your pair buddy has joined the session."
       User.add(member.id, member.arrivalTime)
       return unless User.me.isLeader()
@@ -154,6 +155,7 @@ class Session
         User.withColour(member.id).updatePosition(sharePane.getTab(), [0])
 
     @channel.bind 'pusher:member_removed', (member) =>
+      if member.id is "blank" then return
       user = User.withColour(member.id)
       user.clearIndicators()
       user.remove()
