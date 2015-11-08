@@ -62,6 +62,7 @@ class Session
     @pusher = new Pusher @app_key,
       encrypted: true
       authTransport: 'client'
+      disableStats: true
       clientAuth:
         key: @app_key
         secret: @app_secret
