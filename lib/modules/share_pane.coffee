@@ -33,7 +33,7 @@ class SharePane
 
     @editorListeners = new CompositeDisposable
 
-    if @title
+    if @title and atom.packages.isPackageActive('tabs')
       @setTabTitle()
       @persistTabTitle()
 
@@ -146,6 +146,7 @@ class SharePane
       User.withColour(data.colour).updatePosition(@getTab(), [actionArea.toArray()[0]])
 
   getTab: ->
+    return unless atom.packages.isPackageActive('tabs')
     tabs = $('li[is="tabs-tab"]')
     tab = (t for t in tabs when t.item.id is @editor.id)[0]
     tab
