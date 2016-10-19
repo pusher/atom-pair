@@ -24,7 +24,7 @@ Alternatively, go to the command palette via <kbd>Command</kbd>+<kbd>Shift</kbd>
 
 You can either decide to pair on a blank slate, or on existing code. If you invite somebody to collaborate on existing code, they will see everything you can, and their syntax highlighting will be synchronized with yours.
 
-As detailed below, there are two ways you can invite others. Given a [free](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) Sandbox plan, there will be a maximum of 20 collaborators per session.
+As detailed below, there are two ways you can invite others. Given a [free](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) Sandbox plan, there will be a maximum of 20 collaborators per session. *Note that you must enable client-events in App Settings when you create a new Pusher app, otherwise this plugin will not work.*
 
 #### Basic Invitation
 
@@ -36,7 +36,7 @@ A session ID will be automatically copied to your clipboard.
 
 #### HipChat Invitation
 
-The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up). *You must enable client-events when you start a new app, otherwise this plugin will not work*.
+The other way - one that we use quite often - is to invite collaborators over [HipChat](http://hipchat.com), a service for intra-company chat. You can sign up for a free account [here](https://www.hipchat.com/sign_up).
 
 We wanted this partly as an easy way of giving collaborators a session ID, but also so that other members of the team could join in if they wanted to.
 
@@ -68,7 +68,7 @@ To end a pairing session, go to `AtomPair: Disconnect`, and you will be disconne
 
 ## Free And Open For Everyone
 
-Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) and enter your own app key and app secret by going to your Package Settings. A free Sandbox plan should be more than enough for your pairing sessions.
+Currently, you are given default Pusher credentials when you install the package, so that you can get started with as less friction as possible. Communication will take place over a randomly generated channel name. However, for improved security, we encourage you to [create a free account](https://pusher.com/signup?utm_source=Reddit&utm_medium=Atom.io_Package_Page&utm_campaign=AtomPair) and enter your own app key and app secret by going to your Package Settings. A free Sandbox plan should be more than enough for your pairing sessions. *Note that you must enable client-events in App Settings when you create a new Pusher app, otherwise this plugin will not work.*
 
 ### Contributing
 
@@ -87,7 +87,7 @@ But if there are any features you find lacking, feel more than welcome to [get i
 ### Running Tests
 
 To run the tests, just type into your command line at the root of the project:
-  
+
     $ apm test
 
 ### Adding New Methods of Invitation
