@@ -21,6 +21,12 @@ module.exports = AtomPair =
       type: 'string'
       description: 'HipChat room name for sending invitations (optional)'
       default: ''
+    pusher_cluster:
+      type: 'string'
+      title: 'Pusher cluster'
+      description: 'The name of the Pusher cluster where you created your app'
+      default: 'mt1'
+      enum: ['mt1', 'eu', 'ap1', 'ap2']
     pusher_app_key:
       type: 'string'
       description: 'Pusher App Key (sign up at http://pusher.com/signup and change for added security)'

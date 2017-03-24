@@ -57,6 +57,7 @@ describe "User", ->
 
     runs ->
       spyOn(window, 'Date').andReturn({getTime: -> 30})
+      atom.config.set('atom-pair.pusher_cluster', 'cluster');
       atom.config.set('atom-pair.pusher_app_key', 'key')
       atom.config.set('atom-pair.pusher_app_secret', 'secret')
       session = new Session
@@ -66,7 +67,7 @@ describe "User", ->
       ))
 
       expect(window.Pusher.argsForCall.length).toBe(2)
-      expect(window.Pusher.argsForCall).toEqual([ [ 'key', { encrypted: true, authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ 'key', { encrypted: true, authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
+      expect(window.Pusher.argsForCall).toEqual([ [ 'key', { encrypted: true, authTransport : 'client', cluster : 'cluster', clientAuth : { key : 'key', secret : 'secret', user_id : 'blank', user_info : { arrivalTime : 'blank' } } } ], [ 'key', { encrypted: true, authTransport : 'client', clientAuth : { key : 'key', secret : 'secret', user_id : 'blue', user_info : { arrivalTime : 30 } } } ] ])
       expect(User.all.length).toBe(2)
       expect(User.me.isLeader()).toBe(false)
       expect(User.me.colour).not.toBe('red')

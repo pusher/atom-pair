@@ -62,6 +62,7 @@ class Session
     @pusher = new Pusher @app_key,
       encrypted: true
       authTransport: 'client'
+      cluster: @app_cluster
       clientAuth:
         key: @app_key
         secret: @app_secret
@@ -178,6 +179,7 @@ class Session
       if (_.all SharePane.all, (pane) => !pane.connected) then @end()
 
   getKeysFromConfig: ->
+    @app_cluster ?= atom.config.get 'atom-pair.pusher_cluster'
     @app_key ?= atom.config.get 'atom-pair.pusher_app_key'
     @app_secret ?= atom.config.get 'atom-pair.pusher_app_secret'
     @hc_key ?= atom.config.get 'atom-pair.hipchat_token'
