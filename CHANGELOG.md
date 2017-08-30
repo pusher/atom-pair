@@ -1,3 +1,14 @@
+#### 2.0.6
+
+* Pencil icon shows the active pane the buddy is working on.
+* Syncs over the names of tab titles.
+* Throws error if editor or buffer is of an unexpected type. Helps diagnose errors
+
+#### 2.0.5
+
+* Fix errors with multiple tab syncing.
+* Fix custom paste errors
+
 #### 2.0.2
 
 * Resolve issue where `ensureActiveTextEditor` would return a promise object, and therefore raise an error.

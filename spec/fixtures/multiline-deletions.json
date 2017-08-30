@@ -1,0 +1,49 @@
+[
+  [
+    {
+      "changeType": "substitution",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 0,
+            "column": 0
+          },
+          "end": {
+            "row": 0,
+            "column": 0
+          }
+        },
+        "newRange": {
+          "start": {
+            "row": 0,
+            "column": 0
+          },
+          "end": {
+            "row": 6,
+            "column": 23
+          }
+        },
+        "newText": "i have of late\nwherefore i know not\nlost all my mirth\nand indeed it goes so heavily with my disposition\nthat this goodly frame the earth\nseems to me\na sterile promontory :("
+      },
+      "colour": "red"
+    }
+  ],
+  [
+    {
+      "changeType": "deletion",
+      "event": {
+        "oldRange": {
+          "start": {
+            "row": 3,
+            "column": 0
+          },
+          "end": {
+            "row": 4,
+            "column": 32
+          }
+        }
+      },
+      "colour": "red"
+    }
+  ]
+]

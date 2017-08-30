@@ -1,56 +1,51 @@
 randomstring = require 'randomstring'
-Marker = null
 GrammarSync = null
-CustomPaste = null
 chunkString = null
+User = require './user'
 
 {CompositeDisposable, Range, Emitter} = require 'atom'
 _ = require 'underscore'
+$ = require 'jquery'
 
 module.exports =
 class SharePane
 
   @all: []
 
-  @globalEmitter: new Emitter
-
-  @id: (id)->
-    _.findWhere(@all,{id: id})
-
+  @id: (id) -> _.findWhere(@all,{id: id})
   @each: (fn) -> _.each(@all, fn)
-
   @any: (fn)-> _.any(@all, fn)
 
-  constructor: (options) ->
+  @globalEmitter: new Emitter
 
-    @editor = options.editor
+  @clear: ->
+    @all = []
+    @globalEmitter.dispose()
+
+  constructor: (options) ->
+    _.extend(@, options)
+    if @editor.constructor.name isnt "TextEditor" then throw("editor is of type #{@editor.constructor.name}")
     @buffer = @editor.buffer
-    @id = options.id || randomstring.generate(6)
-    @pusher = options.pusher
-    @sessionId = options.sessionId
+    if !@buffer then throw("buffer is nil. editor: #{@editor}")
+
+    @id ?= randomstring.generate(6)
     @triggerPush = true
-    @markerColour = options.markerColour
-    @timeouts = []
-    @events = []
 
     @editorListeners = new CompositeDisposable
 
-    @editorListeners.add(atom.commands.add atom.views.getView(@editor), 'AtomPair:custom-paste': => @customPaste()) #TODO: fix custom-paste
-
-    @disconnectEmitter = new Emitter
+    if @title
+      @setTabTitle()
+      @persistTabTitle()
 
     atom.views.getView(@editor).setAttribute('id', 'AtomPair')
 
-    Marker = require './marker'
     GrammarSync = require './grammar_sync'
-    CustomPaste = require './custom_paste'
     chunkString = require '../helpers/chunk-string'
 
-    _.extend(@, Marker, GrammarSync, CustomPaste)
+    _.extend(@, GrammarSync)
     @constructor.all.push(@)
     @subscribe()
     @activate()
-
 
   subscribe: ->
     channelName = "presence-session-#{@sessionId}-#{@id}"
@@ -70,12 +65,10 @@ class SharePane
 
     @channel.bind 'client-change', (events) =>
       _.each events, (event) =>
-        @changeBuffer(event) if event.eventType is 'buffer-change'
-        if event.eventType is 'buffer-selection'
-          @updateCollaboratorMarker(event)
+        @changeBuffer(event)
 
-    @triggerEventQueue()
-
+    @channel.bind 'client-buffer-selection', (event) =>
+      User.withColour(event.colour).updatePosition(@getTab(), event.rows)
 
     @editorListeners.add @listenToBufferChanges()
     @editorListeners.add @syncSelectionRange()
@@ -83,17 +76,26 @@ class SharePane
 
     @listenForDestruction()
 
+  setTabTitle: ->
+    tab = @getTab()
+    tab.itemTitle.innerText = @title
+
+  persistTabTitle: ->
+    openListener = atom.workspace.onDidOpen => @setTabTitle()
+    closeListener = @constructor.globalEmitter.on 'disconnected', => @setTabTitle()
+    @editorListeners.add(openListener)
+    @editorListeners.add(closeListener)
+
   disconnect: ->
     @channel.unsubscribe()
     @editorListeners.dispose()
     @connected = false
     atom.views.getView(@editor)?.removeAttribute('id')
+    $('.atom-pair-active-icon').remove()
     @editor = @buffer = null
     @constructor.globalEmitter.emit('disconnected')
 
-
   listenForDestruction: ->
-    # TODO: MAKE THIS SPECIFIC TO THIS SHAREPANE
     @editorListeners.add @buffer.onDidDestroy => @disconnect()
     @editorListeners.add @editor.onDidDestroy => @disconnect()
 
@@ -119,8 +121,11 @@ class SharePane
         changeType = 'insertion'
         event  = {newRange: event.newRange, newText: event.newText}
 
-      event = {changeType: changeType, event: event, colour: @markerColour, eventType: 'buffer-change'}
-      @events.push(event)
+      if event.newText and event.newText.length > 800
+        @shareFile()
+      else
+        event = {changeType: changeType, event: event, colour: User.me.colour}
+        @queue.add(@channel.name, 'client-change', [event])
 
   changeBuffer: (data) ->
     if data.event.newRange then newRange = Range.fromObject(data.event.newRange)
@@ -128,9 +133,6 @@ class SharePane
     if data.event.newText then newText = data.event.newText
 
     @withoutTrigger =>
-
-      @clearMarkers(data.colour)
-
       switch data.changeType
         when 'deletion'
           @buffer.delete oldRange
@@ -141,32 +143,25 @@ class SharePane
         else
           @buffer.insert newRange.start, newText
           actionArea = newRange.start
+      User.withColour(data.colour).updatePosition(@getTab(), [actionArea.toArray()[0]])
 
-      @editor.scrollToBufferPosition(actionArea)
-      @addMarker(actionArea.toArray()[0], data.colour)
+  getTab: ->
+    tabs = $('li[is="tabs-tab"]')
+    tab = (t for t in tabs when t.item.id is @editor.id)[0]
+    tab
 
   syncSelectionRange: ->
     @editor.onDidChangeSelectionRange (event) =>
       rows = event.newBufferRange.getRows()
       return unless rows.length > 1
-      @events.push {eventType: 'buffer-selection', colour: @markerColour, rows: rows}
-
-  triggerEventQueue: ->
-    @eventInterval = setInterval(=>
-      if @events.length > 0
-        console.log(@events)
-        @channel.trigger 'client-change', @events
-        @events = []
-    , 120)
-
+      @queue.add(@channel.name, 'client-buffer-selection', {colour: User.me.colour, rows: rows})
 
   shareFile: ->
     currentFile = @buffer.getText()
     return if currentFile.length is 0
 
     if currentFile.length < 950
-      @channel.trigger 'client-share-whole-file', currentFile
+      @queue.add(@channel.name, 'client-share-whole-file', currentFile)
     else
       chunks = chunkString(currentFile, 950)
-      _.each chunks, (chunk, index) =>
-        setTimeout(( => @channel.trigger 'client-share-partial-file', chunk), 180 * index)
+      _.each chunks, (chunk, index) => @queue.add @channel.name, 'client-share-partial-file', chunk
