@@ -54,4 +54,4 @@ class User
 
   updatePosition: (tab, rows)->
     PresenceIndicator.updateCollaboratorMarker(@colour, rows)
-    PresenceIndicator.setActiveIcon(tab, @colour)
+    if atom.packages.isPackageActive('tabs') then PresenceIndicator.setActiveIcon(tab, @colour)
